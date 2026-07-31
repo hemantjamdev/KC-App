@@ -5,6 +5,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/widgets/app_loading_indicator.dart';
+import '../../../../core/widgets/kc_app_bar.dart';
 import '../../../design/domain/models/design_model.dart';
 import '../../../design/presentation/controllers/design_controller.dart';
 import '../../domain/models/section_model.dart';
@@ -73,26 +74,14 @@ class _CustomerSectionDetailsPageState
       return inName || inTags;
     }).toList();
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          widget.section.title,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+    return PopScope(
+      canPop: context.canPop(),
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: KCAppBar(
+          title: widget.section.title,
         ),
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_rounded,
-            color: AppColors.textPrimary,
-          ),
-          onPressed: () => context.pop(),
-        ),
-      ),
-      body: SafeArea(
+        body: SafeArea(
         child: _sectionController.isLoading
             ? const Center(
                 child: Column(
@@ -226,8 +215,9 @@ class _CustomerSectionDetailsPageState
                 ],
               ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildEmptyState() {
     final isSearching = _searchQuery.isNotEmpty;

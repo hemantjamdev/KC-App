@@ -34,8 +34,9 @@ class GoogleAuthBottomSheet extends ConsumerWidget {
     final authState = ref.watch(googleAuthNotifierProvider);
     final isLoading = authState.isLoading;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 36),
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 36),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -163,6 +164,7 @@ class GoogleAuthBottomSheet extends ConsumerWidget {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 }

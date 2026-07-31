@@ -60,10 +60,10 @@ class KCAppBar extends StatelessWidget implements PreferredSizeWidget {
           (title != null
               ? Text(
                   title!,
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.playfairDisplay(
                     color: AppColors.textPrimary,
                     fontSize: 18,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.bold,
                   ),
                 )
               : null),

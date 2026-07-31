@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kc_app/src/features/boutique/presentation/controllers/boutique_selection_controller.dart';
 import 'package:kc_app/src/features/stitching/domain/models/stitching_order_model.dart';
 import 'package:kc_app/src/features/stitching/presentation/controllers/stitching_order_controller.dart';
@@ -64,11 +65,13 @@ class _CustomerStitchingOrderDetailsPageState
   Widget build(BuildContext context) {
     final history = _controller.getHistoryForOrder(_order.id);
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: KCAppBar(
-        title: _order.orderNumber,
-      ),
+    return PopScope(
+      canPop: context.canPop(),
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: KCAppBar(
+          title: _order.orderNumber,
+        ),
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -252,8 +255,9 @@ class _CustomerStitchingOrderDetailsPageState
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _infoCard(String title, List<Widget> children) {
     return Container(

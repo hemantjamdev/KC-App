@@ -90,13 +90,14 @@ class _StitchingRequestBottomSheetState
     final isSubmitting = submissionState is StitchingSubmissionSubmitting;
     final failure = submissionState.mapOrNull(failure: (f) => f.failure);
 
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        24,
-        20,
-        24,
-        MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          24,
+          20,
+          24,
+          MediaQuery.of(context).viewInsets.bottom + 24,
+        ),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -278,6 +279,7 @@ class _StitchingRequestBottomSheetState
         ],
       ),
     ),
-  );
+  ),
+);
 }
 }

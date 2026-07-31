@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -40,9 +41,11 @@ class _CustomerDesignDetailsPageState
               ? [widget.design.thumbnailUrl!]
               : <String>[]);
 
-    return Scaffold(
-      backgroundColor: AppColors.warmIvory,
-      body: SafeArea(
+    return PopScope(
+      canPop: context.canPop(),
+      child: Scaffold(
+        backgroundColor: AppColors.warmIvory,
+        body: SafeArea(
         child: Column(
           children: [
             // ── Top Navigation Bar ──────────────────────────────
@@ -497,8 +500,9 @@ class _CustomerDesignDetailsPageState
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   void _openFullscreenGallery(
     BuildContext context,

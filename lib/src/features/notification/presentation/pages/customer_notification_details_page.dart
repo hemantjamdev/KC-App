@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:kc_app/src/features/auth/application/providers/auth_providers.dart';
 import 'package:kc_app/src/features/notification/application/providers/notification_providers.dart';
@@ -53,11 +54,13 @@ class _CustomerNotificationDetailsPageState
         notif.relatedEntityType != null &&
         notif.relatedEntityType != NotificationDestinationType.none;
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: KCAppBar(
-        title: notif.type.label,
-      ),
+    return PopScope(
+      canPop: context.canPop(),
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: KCAppBar(
+          title: notif.type.label,
+        ),
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -158,6 +161,7 @@ class _CustomerNotificationDetailsPageState
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
