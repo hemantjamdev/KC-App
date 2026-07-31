@@ -2,17 +2,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/firebase/firestore_paths.dart';
 import '../../domain/models/design_model.dart';
 
-/// Firestore repository for managing designs and availability.
+/// Firestore repository for managing customer design catalogue.
 class DesignFirestoreRepository {
   DesignFirestoreRepository({FirebaseFirestore? firestore})
     : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
 
+  /// Watch active designs for a boutique.
   Stream<List<DesignModel>> watchDesigns(String boutiqueId) {
     return _firestore
         .collection(FirestorePaths.designs)
-        .where('boutiqueId', isEqualTo: boutiqueId)
         .snapshots()
         .map((snapshot) {
           final list = snapshot.docs.map(_fromFirestore).toList();
@@ -22,6 +22,36 @@ class DesignFirestoreRepository {
         .handleError((_) => <DesignModel>[]);
   }
 
+  /// Fetch single design by ID.
+  Future<DesignModel?> getDesignById(String designId) async {
+    final doc = await _firestore
+        .collection(FirestorePaths.designs)
+        .doc(designId)
+        .get();
+    if (!doc.exists) return null;
+    return _fromFirestore(doc);
+  }
+
+  /// Fetch multiple designs by list of IDs (e.g. for Favorites).
+  Future<List<DesignModel>> getDesignsByIds(List<String> ids) async {
+    if (ids.isEmpty) return [];
+    final chunks = <List<String>>[];
+    for (var i = 0; i < ids.length; i += 30) {
+      chunks.add(ids.sublist(i, i + 30 > ids.length ? ids.length : i + 30));
+    }
+
+    final results = <DesignModel>[];
+    for (final chunk in chunks) {
+      final snapshot = await _firestore
+          .collection(FirestorePaths.designs)
+          .where(FieldPath.documentId, whereIn: chunk)
+          .get();
+      results.addAll(snapshot.docs.map(_fromFirestore));
+    }
+    return results;
+  }
+
+  /// Create a design (admin/catalog sync).
   Future<void> createDesign(DesignModel design) async {
     await _firestore
         .collection(FirestorePaths.designs)
@@ -29,6 +59,7 @@ class DesignFirestoreRepository {
         .set(_toFirestore(design, isCreate: true));
   }
 
+  /// Update an existing design.
   Future<void> updateDesign(DesignModel design) async {
     await _firestore
         .collection(FirestorePaths.designs)
@@ -36,6 +67,7 @@ class DesignFirestoreRepository {
         .update(_toFirestore(design, isCreate: false));
   }
 
+  /// Upsert availability per branch.
   Future<void> upsertAvailability({
     required String boutiqueId,
     required String branchId,
@@ -47,7 +79,6 @@ class DesignFirestoreRepository {
         .collection(FirestorePaths.designAvailability)
         .doc(docId)
         .set({
-          'id': docId,
           'boutiqueId': boutiqueId,
           'branchId': branchId,
           'designId': designId,
@@ -84,6 +115,9 @@ class DesignFirestoreRepository {
       isActive: data['isActive'] as bool? ?? true,
       createdAt: createdAt,
       updatedAt: updatedAt,
+      price: (data['price'] as num?)?.toDouble() ?? 0.0,
+      colors: List<String>.from(data['colors'] as List? ?? []),
+      sizes: List<String>.from(data['sizes'] as List? ?? []),
     );
   }
 
@@ -105,6 +139,9 @@ class DesignFirestoreRepository {
       'searchKeywords': design.searchKeywords,
       'sortOrder': design.sortOrder,
       'isActive': design.isActive,
+      'price': design.price,
+      'colors': design.colors,
+      'sizes': design.sizes,
       'updatedAt': FieldValue.serverTimestamp(),
       if (isCreate) 'createdAt': FieldValue.serverTimestamp(),
     };

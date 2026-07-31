@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:kc_app/src/features/boutique/presentation/controllers/boutique_selection_controller.dart';
 import 'package:kc_app/src/features/stitching/domain/models/stitching_order_model.dart';
 import 'package:kc_app/src/features/stitching/presentation/controllers/stitching_order_controller.dart';
 import 'package:kc_app/src/features/stitching/presentation/widgets/stitching_order_timeline.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/kc_app_bar.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 
@@ -62,29 +62,12 @@ class _CustomerStitchingOrderDetailsPageState
 
   @override
   Widget build(BuildContext context) {
-    final scope = BoutiqueSelectionScope.of(context);
-    final boutique = scope.selectedBoutique;
-    final branch = scope.selectedBranch;
     final history = _controller.getHistoryForOrder(_order.id);
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          _order.orderNumber,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_rounded,
-            color: AppColors.textPrimary,
-          ),
-          onPressed: () => context.pop(),
-        ),
+      appBar: KCAppBar(
+        title: _order.orderNumber,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -157,9 +140,8 @@ class _CustomerStitchingOrderDetailsPageState
                   const SizedBox(height: AppSpacing.lg),
 
                   // Boutique Location Context
-                  _infoCard('Boutique & Location', [
-                    _infoRow('Boutique', boutique?.name ?? 'Kapada Creation'),
-                    _infoRow('Branch', branch?.name ?? 'Main Branch'),
+                  _infoCard('Store Location', [
+                    _infoRow('Store', 'Kapada Creation Studio'),
                   ]),
 
                   const SizedBox(height: AppSpacing.md),

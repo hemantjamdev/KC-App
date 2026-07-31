@@ -1,10 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../app/app_routes.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_radius.dart';
-import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/theme/app_colors.dart';
 
 /// Splash Page for Kapada Creation Customer application.
 class SplashPage extends StatefulWidget {
@@ -27,7 +26,7 @@ class _SplashPageState extends State<SplashPage>
 
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 1200),
     );
 
     _fadeAnimation = CurvedAnimation(
@@ -35,15 +34,15 @@ class _SplashPageState extends State<SplashPage>
       curve: Curves.easeOut,
     );
 
-    _scaleAnimation = Tween<double>(begin: 0.9, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic),
+    _scaleAnimation = Tween<double>(begin: 0.85, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOutBack),
     );
 
     _animationController.forward();
 
     _timer = Timer(const Duration(milliseconds: 2200), () {
       if (mounted) {
-        context.go(AppRoutes.welcome);
+        context.go(AppRoutes.customerHome);
       }
     });
   }
@@ -58,19 +57,17 @@ class _SplashPageState extends State<SplashPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.brandGreen900,
       body: Stack(
         children: [
-          // Background ambient gradient glow
-          Positioned(
-            top: -100,
-            right: -100,
+          // Background ambient glow
+          Center(
             child: Container(
-              width: 300,
-              height: 300,
-              decoration: const BoxDecoration(
+              width: 320,
+              height: 320,
+              decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.accentGlow,
+                color: AppColors.brandGreen800.withValues(alpha: 0.5),
               ),
             ),
           ),
@@ -83,64 +80,64 @@ class _SplashPageState extends State<SplashPage>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Boutique Brand Icon / Emblem
+                      // Logo Badge
                       Container(
-                        width: 80,
-                        height: 80,
+                        width: 130,
+                        height: 130,
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: const LinearGradient(
-                            colors: [AppColors.primaryLight, AppColors.primary],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
+                          color: AppColors.surfaceWhite,
+                          borderRadius: BorderRadius.circular(28),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.35),
-                              blurRadius: 24.0,
-                              offset: const Offset(0, 6),
+                              color: Colors.black.withValues(alpha: 0.25),
+                              blurRadius: 30,
+                              offset: const Offset(0, 10),
                             ),
                           ],
                         ),
-                        child: const Icon(
-                          Icons.checkroom_rounded,
-                          size: 40,
-                          color: AppColors.background,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: Image.asset(
+                            'assets/images/app_icon.png',
+                            fit: BoxFit.contain,
+                          ),
                         ),
                       ),
-                      const SizedBox(height: AppSpacing.lg),
+                      const SizedBox(height: 32),
 
-                      // Wordmark
-                      const Text(
+                      // Brand Title
+                      Text(
                         'KAPADA CREATION',
-                        style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 3.0,
+                        style: GoogleFonts.playfairDisplay(
+                          color: AppColors.warmIvory,
+                          fontSize: 26,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 3.5,
                         ),
                       ),
-                      const SizedBox(height: AppSpacing.xs),
+                      const SizedBox(height: 10),
 
-                      // Subtitle / Tagline
-                      const Text(
-                        'BOUTIQUE DESIGN CATALOGUE',
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 2.5,
+                      // Tagline
+                      Text(
+                        '“We care what you wear”',
+                        style: GoogleFonts.montserrat(
+                          color: AppColors.mutedGold,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          fontStyle: FontStyle.italic,
+                          letterSpacing: 1.2,
                         ),
                       ),
-                      const SizedBox(height: AppSpacing.xxl),
+                      const SizedBox(height: 48),
 
-                      // Elegant accent bar
-                      Container(
-                        width: 40,
+                      // Loading progress indicator
+                      const SizedBox(
+                        width: 36,
                         height: 2,
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.5),
-                          borderRadius: AppRadius.borderPill,
+                        child: LinearProgressIndicator(
+                          color: AppColors.mutedGold,
+                          backgroundColor: Color(0x33FFFFFF),
                         ),
                       ),
                     ],

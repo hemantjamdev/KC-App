@@ -133,7 +133,9 @@ class AppErrorState extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             Text(
               message,
-              style: AppTypography.cardTitle.copyWith(color: AppColors.charcoal),
+              style: AppTypography.cardTitle.copyWith(
+                color: AppColors.charcoal,
+              ),
               textAlign: TextAlign.center,
             ),
             if (debugDetails != null) ...[
@@ -179,7 +181,10 @@ class AppOfflineBanner extends StatelessWidget {
     return Container(
       width: double.infinity,
       color: AppColors.warning,
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs, horizontal: AppSpacing.md),
+      padding: const EdgeInsets.symmetric(
+        vertical: AppSpacing.xs,
+        horizontal: AppSpacing.md,
+      ),
       child: const Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -187,7 +192,11 @@ class AppOfflineBanner extends StatelessWidget {
           SizedBox(width: AppSpacing.xs),
           Text(
             'Offline mode — showing cached information.',
-            style: TextStyle(fontSize: 12, color: AppColors.surfaceWhite, fontWeight: FontWeight.w500),
+            style: TextStyle(
+              fontSize: 12,
+              color: AppColors.surfaceWhite,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),

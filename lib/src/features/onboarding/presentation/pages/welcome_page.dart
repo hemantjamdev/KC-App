@@ -1,62 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/app_routes.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/widgets/app_button.dart';
-import '../../../auth/presentation/controllers/customer_auth_controller.dart';
-import '../../../boutique/presentation/controllers/boutique_selection_controller.dart';
+import '../../../auth/application/providers/auth_providers.dart';
 
 /// Welcome Page for Kapada Creation Customer application.
-class WelcomePage extends StatefulWidget {
+class WelcomePage extends ConsumerStatefulWidget {
   const WelcomePage({super.key});
 
   @override
-  State<WelcomePage> createState() => _WelcomePageState();
+  ConsumerState<WelcomePage> createState() => _WelcomePageState();
 }
 
-class _WelcomePageState extends State<WelcomePage> {
-  late final CustomerAuthController _authController;
-
-  @override
-  void initState() {
-    super.initState();
-    _authController = CustomerAuthController();
-    _authController.addListener(_onUpdate);
-  }
-
-  void _onUpdate() {
-    if (mounted) setState(() {});
-  }
-
-  @override
-  void dispose() {
-    _authController.removeListener(_onUpdate);
-    _authController.dispose();
-    super.dispose();
-  }
+class _WelcomePageState extends ConsumerState<WelcomePage> {
+  bool _isSigningIn = false;
 
   Future<void> _handleGoogleSignIn() async {
-    final selection = BoutiqueSelectionScope.of(context);
-    final boutiqueId = selection.selectedBoutique?.id ?? 'boutique_01';
-    final branchId = selection.selectedBranch?.id ?? 'branch_01';
+    if (_isSigningIn) return;
+    setState(() => _isSigningIn = true);
 
-    final success = await _authController.signInWithGoogle(
-      defaultBoutiqueId: boutiqueId,
-      defaultBranchId: branchId,
-    );
+    try {
+      final success = await ref
+          .read(customerSessionProvider.notifier)
+          .signInWithGoogle(
+            defaultBoutiqueId: 'boutique_01',
+            defaultBranchId: '',
+          );
 
-    if (success && mounted) {
-      context.go(AppRoutes.customerHome);
-    } else if (mounted && _authController.authError != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_authController.authError!),
-          backgroundColor: AppColors.surfaceLight,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      if (success && mounted) {
+        context.go(AppRoutes.customerHome);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSigningIn = false);
+      }
     }
   }
 
@@ -194,7 +175,7 @@ class _WelcomePageState extends State<WelcomePage> {
                           text: 'Explore Designs',
                           icon: Icons.explore_outlined,
                           onPressed: () =>
-                              context.go(AppRoutes.customerSelectBoutique),
+                              context.push(AppRoutes.customerSelectBoutique),
                         ),
                         const SizedBox(height: AppSpacing.md),
 
@@ -203,10 +184,8 @@ class _WelcomePageState extends State<WelcomePage> {
                           text: 'Sign in with Google',
                           variant: AppButtonVariant.secondary,
                           icon: Icons.g_mobiledata_rounded,
-                          isLoading: _authController.isLoading,
-                          onPressed: _authController.isLoading
-                              ? null
-                              : _handleGoogleSignIn,
+                          isLoading: _isSigningIn,
+                          onPressed: _isSigningIn ? null : _handleGoogleSignIn,
                         ),
                         const SizedBox(height: AppSpacing.md),
 

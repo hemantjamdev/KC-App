@@ -1,496 +1,251 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kc_app/src/features/auth/presentation/controllers/customer_auth_controller.dart';
-import 'package:kc_app/src/features/boutique/presentation/controllers/boutique_selection_controller.dart';
-import 'package:kc_app/src/features/stitching/domain/models/stitching_order_model.dart';
-import 'package:kc_app/src/features/stitching/presentation/controllers/stitching_order_controller.dart';
-
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../app/app_routes.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_radius.dart';
-import '../../../../core/constants/app_spacing.dart';
-import '../../../../core/widgets/app_button.dart';
-import '../../../../core/widgets/app_loading_indicator.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_empty_state.dart';
+import '../../../../core/widgets/app_toast.dart';
+import '../../../../core/widgets/customer_empty_state.dart';
+import '../../../../core/widgets/stitching_status_badge.dart';
+import '../../../auth/application/providers/auth_providers.dart';
+import '../../../auth/presentation/widgets/google_auth_bottom_sheet.dart';
+import '../../application/providers/stitching_providers.dart';
+import '../../domain/models/stitching_order_model.dart';
+import '../widgets/stitching_request_bottom_sheet.dart';
 
-/// Customer Stitching Order List Page ("My Stitching").
-class CustomerStitchingOrderListPage extends StatefulWidget {
+/// Customer "My Stitching" Tab Page.
+/// Protected action: Requires Google Auth.
+/// Displays customer's real stitching requests streamed from Firestore `stitchingOrders` collection.
+class CustomerStitchingOrderListPage extends ConsumerWidget {
   const CustomerStitchingOrderListPage({super.key});
 
   @override
-  State<CustomerStitchingOrderListPage> createState() =>
-      _CustomerStitchingOrderListPageState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isAuthenticated = ref.watch(isAuthenticatedProvider);
+    final user = ref.watch(currentCustomerUserProvider);
 
-class _CustomerStitchingOrderListPageState
-    extends State<CustomerStitchingOrderListPage> {
-  late final CustomerAuthController _authController;
-  StitchingOrderController? _stitchingController;
-  final TextEditingController _searchController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    _authController = CustomerAuthController();
-    _authController.addListener(_onUpdate);
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final scope = BoutiqueSelectionScope.of(context);
-    final boutiqueId = scope.selectedBoutique?.id ?? 'boutique_01';
-    final branchId = scope.selectedBranch?.id;
-    final customerId = _authController.currentCustomer?.id ?? 'cust_01';
-
-    if (_authController.isAuthenticated) {
-      _stitchingController?.removeListener(_onUpdate);
-      _stitchingController = StitchingOrderController(
-        boutiqueId: boutiqueId,
-        branchId: branchId,
-        customerId: customerId,
-      );
-      _stitchingController?.addListener(_onUpdate);
-    }
-  }
-
-  void _onUpdate() {
-    if (mounted) setState(() {});
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    _stitchingController?.removeListener(_onUpdate);
-    _stitchingController?.dispose();
-    _authController.removeListener(_onUpdate);
-    _authController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isAuth = _authController.isAuthenticated;
-    final orders = _stitchingController?.visibleOrders ?? [];
-
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text(
-          'My Stitching',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+    if (!isAuthenticated || user == null) {
+      return Scaffold(
+        backgroundColor: AppColors.warmIvory,
+        body: SafeArea(
+          child: CustomerEmptyState(
+            icon: Icons.design_services_outlined,
+            title: 'Track Your Custom Tailoring',
+            subtitle:
+                'Sign in with Google to request custom stitching, view order progress, and get pickup notifications.',
+            actionLabel: 'Continue with Google',
+            action: () => GoogleAuthBottomSheet.show(context),
           ),
         ),
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_rounded,
-            color: AppColors.textPrimary,
+      );
+    }
+
+    final customerOrdersAsync = ref.watch(customerOrderListProvider(user.uid));
+    final orders = customerOrdersAsync.valueOrNull ?? [];
+    final isLoading = customerOrdersAsync.isLoading;
+
+    return Scaffold(
+      backgroundColor: AppColors.warmIvory,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          final submitted = await StitchingRequestBottomSheet.show(context);
+          if (submitted == true && context.mounted) {
+            AppToast.show(
+              context,
+              'Stitching request submitted successfully!',
+              type: ToastType.success,
+            );
+          }
+        },
+        backgroundColor: AppColors.brandGreen900,
+        foregroundColor: AppColors.surfaceWhite,
+        elevation: 4,
+        icon: const Icon(Icons.add_rounded, size: 20),
+        label: Text(
+          'New Request',
+          style: GoogleFonts.montserrat(
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
           ),
-          onPressed: () => context.pop(),
         ),
       ),
       body: SafeArea(
-        child: !isAuth
-            ? _buildGuestCard()
-            : Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.lg,
-                      AppSpacing.md,
-                      AppSpacing.lg,
-                      0,
-                    ),
-                    child: Column(
-                      children: [
-                        // Search Field
-                        TextField(
-                          controller: _searchController,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 14,
-                          ),
-                          cursorColor: AppColors.primary,
-                          decoration: InputDecoration(
-                            hintText: 'Search order number or design name…',
-                            hintStyle: const TextStyle(
-                              color: AppColors.textHint,
-                              fontSize: 14,
-                            ),
-                            prefixIcon: const Icon(
-                              Icons.search_rounded,
-                              color: AppColors.textMuted,
-                              size: 20,
-                            ),
-                            suffixIcon: _searchController.text.isNotEmpty
-                                ? IconButton(
-                                    icon: const Icon(
-                                      Icons.clear_rounded,
-                                      color: AppColors.textMuted,
-                                      size: 20,
-                                    ),
-                                    onPressed: () {
-                                      _searchController.clear();
-                                      _stitchingController?.searchOrders('');
-                                    },
-                                  )
-                                : null,
-                            filled: true,
-                            fillColor: AppColors.surface,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.md,
-                              vertical: AppSpacing.sm,
-                            ),
-                            border: const OutlineInputBorder(
-                              borderRadius: AppRadius.borderMd,
-                              borderSide: BorderSide(
-                                color: AppColors.surfaceBorder,
-                              ),
-                            ),
-                            enabledBorder: const OutlineInputBorder(
-                              borderRadius: AppRadius.borderMd,
-                              borderSide: BorderSide(
-                                color: AppColors.surfaceBorder,
-                              ),
-                            ),
-                            focusedBorder: const OutlineInputBorder(
-                              borderRadius: AppRadius.borderMd,
-                              borderSide: BorderSide(
-                                color: AppColors.primary,
-                                width: 1.5,
-                              ),
-                            ),
-                          ),
-                          onChanged: (q) =>
-                              _stitchingController?.searchOrders(q),
+        child: RefreshIndicator(
+          color: AppColors.brandGreen,
+          backgroundColor: AppColors.surfaceWhite,
+          onRefresh: () async {
+            ref.invalidate(customerOrderListProvider(user.uid));
+            await ref.read(customerOrderListProvider(user.uid).future);
+          },
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
+            slivers: [
+              // ── Header ─────────────────────────────────────────
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'My Stitching',
+                        style: GoogleFonts.playfairDisplay(
+                          fontSize: 30,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.charcoal,
                         ),
-                        const SizedBox(height: AppSpacing.md),
-                        // Status Filter Chips
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: [
-                              _statusFilterChip(null, 'All Orders'),
-                              const SizedBox(width: AppSpacing.xs),
-                              ...StitchingOrderStatus.values.map(
-                                (status) => Padding(
-                                  padding: const EdgeInsets.only(
-                                    right: AppSpacing.xs,
-                                  ),
-                                  child: _statusFilterChip(
-                                    status,
-                                    status.customerLabel,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                      ),
+                      Text(
+                        'Custom tailoring & status updates',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 13,
+                          fontStyle: FontStyle.italic,
+                          color: AppColors.mutedText,
                         ),
-                        const SizedBox(height: AppSpacing.sm),
-                      ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              if (isLoading)
+                const SliverFillRemaining(
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.brandGreen800,
+                      strokeWidth: 2,
                     ),
                   ),
-                  Expanded(
-                    child: _stitchingController?.isLoading == true
-                        ? const Center(child: AppLoadingIndicator(size: 32))
-                        : orders.isEmpty
-                        ? _buildEmptyState()
-                        : ListView.separated(
-                            padding: const EdgeInsets.fromLTRB(
-                              AppSpacing.lg,
-                              AppSpacing.sm,
-                              AppSpacing.lg,
-                              AppSpacing.xxl,
-                            ),
-                            physics: const BouncingScrollPhysics(),
-                            itemCount: orders.length,
-                            separatorBuilder: (_, _) =>
-                                const SizedBox(height: AppSpacing.md),
-                            itemBuilder: (context, i) {
-                              final order = orders[i];
-                              return _CustomerOrderCard(
-                                order: order,
-                                onTap: () => context.push(
-                                  AppRoutes.customerStitchingDetails,
-                                  extra: order,
-                                ),
-                              );
-                            },
-                          ),
+                )
+              else if (orders.isEmpty)
+                const SliverFillRemaining(
+                  child: AppEmptyState(
+                    icon: Icons.design_services_outlined,
+                    title: 'No stitching requests yet',
+                    message:
+                        'Tap + New Request below to submit a custom tailoring or alteration request.',
                   ),
-                ],
-              ),
-      ),
-    );
-  }
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (ctx, idx) => _StitchingOrderCard(order: orders[idx]),
+                      childCount: orders.length,
+                    ),
+                  ),
+                ),
 
-  Widget _statusFilterChip(StitchingOrderStatus? status, String label) {
-    final selected = _stitchingController?.selectedStatusFilter == status;
-    return GestureDetector(
-      onTap: () => _stitchingController?.filterByStatus(status),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.xs,
-        ),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.primary : AppColors.surface,
-          borderRadius: AppRadius.borderPill,
-          border: Border.all(
-            color: selected ? AppColors.primary : AppColors.surfaceBorder,
+              const SliverToBoxAdapter(child: SizedBox(height: 32)),
+            ],
           ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: selected ? AppColors.background : AppColors.textMuted,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGuestCard() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 400),
-          child: Container(
-            padding: const EdgeInsets.all(AppSpacing.xl),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: AppRadius.borderXl,
-              border: Border.all(color: AppColors.surfaceBorder),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.content_cut_rounded,
-                  size: 56,
-                  color: AppColors.primary,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                const Text(
-                  'Sign in to view your stitching orders',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                const Text(
-                  'Connect your Google account to track order progress, view measurements, and receive updates.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: AppColors.textMuted,
-                    fontSize: 13,
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xl),
-                AppButton(
-                  text: 'Sign in with Google',
-                  icon: Icons.login_rounded,
-                  onPressed: () => context.push(AppRoutes.customerProfile),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                TextButton(
-                  onPressed: () => context.pop(),
-                  child: const Text(
-                    'Continue Browsing',
-                    style: TextStyle(color: AppColors.textMuted),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    final hasFilter =
-        _searchController.text.isNotEmpty ||
-        _stitchingController?.selectedStatusFilter != null;
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              hasFilter
-                  ? Icons.search_off_rounded
-                  : Icons.content_paste_rounded,
-              color: AppColors.textMuted,
-              size: 48,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              hasFilter
-                  ? 'No stitching orders match your search.'
-                  : 'You do not have any stitching orders yet.',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
         ),
       ),
     );
   }
 }
 
-class _CustomerOrderCard extends StatelessWidget {
-  const _CustomerOrderCard({required this.order, required this.onTap});
+class _StitchingOrderCard extends StatelessWidget {
+  const _StitchingOrderCard({required this.order});
 
   final StitchingOrderModel order;
-  final VoidCallback onTap;
-
-  String _formatDate(DateTime? dt) {
-    if (dt == null) return 'TBD';
-    return '${dt.day}/${dt.month}/${dt.year}';
-  }
 
   @override
   Widget build(BuildContext context) {
-    final primaryDesign = order.designReferences.isNotEmpty
+    final titleName = order.designReferences.isNotEmpty
         ? order.designReferences.first.designName
-        : 'Custom Design';
-    final extraCount = order.designReferences.length - 1;
+        : 'Custom Stitching Request';
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: AppRadius.borderLg,
-          border: Border.all(color: AppColors.surfaceBorder),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    order.orderNumber,
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.sm,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.15),
-                    borderRadius: AppRadius.borderPill,
-                  ),
-                  child: Text(
-                    order.status.customerLabel,
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              primaryDesign,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            if (extraCount > 0)
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceWhite,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.borderSoft),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
               Text(
-                '+ $extraCount additional item${extraCount > 1 ? 's' : ''}',
-                style: const TextStyle(
-                  color: AppColors.textMuted,
+                order.orderNumber,
+                style: GoogleFonts.montserrat(
                   fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.brandGreen900,
+                  letterSpacing: 0.5,
                 ),
               ),
-            const SizedBox(height: AppSpacing.md),
+              StitchingStatusBadge(status: order.status.name),
+            ],
+          ),
+          const SizedBox(height: 10),
 
-            // Progress bar
-            ClipRRect(
-              borderRadius: AppRadius.borderPill,
-              child: LinearProgressIndicator(
-                value: order.status.progressFraction,
-                backgroundColor: AppColors.surfaceLight,
-                valueColor: const AlwaysStoppedAnimation<Color>(
-                  AppColors.primary,
-                ),
-                minHeight: 6,
-              ),
+          Text(
+            titleName,
+            style: GoogleFonts.playfairDisplay(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: AppColors.charcoal,
             ),
-            const SizedBox(height: AppSpacing.sm),
+          ),
+          const SizedBox(height: 12),
 
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Expected: ${_formatDate(order.expectedReadyAt)}',
-                  style: const TextStyle(
-                    color: AppColors.textMuted,
-                    fontSize: 12,
-                  ),
+          // Progress Fraction Bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: order.status.progressFraction,
+              backgroundColor: AppColors.brandGreen50,
+              color: AppColors.brandGreen800,
+              minHeight: 6,
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Status: ${order.status.customerLabel}',
+                style: GoogleFonts.montserrat(
+                  fontSize: 12,
+                  color: AppColors.mutedText,
                 ),
-                const Row(
+              ),
+              GestureDetector(
+                onTap: () => context.push(
+                  AppRoutes.customerStitchingDetails,
+                  extra: order,
+                ),
+                child: Row(
                   children: [
                     Text(
-                      'View Details',
-                      style: TextStyle(
-                        color: AppColors.primary,
+                      'Details',
+                      style: GoogleFonts.montserrat(
                         fontSize: 12,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.brandGreen800,
                       ),
                     ),
-                    SizedBox(width: 2),
-                    Icon(
+                    const Icon(
                       Icons.chevron_right_rounded,
-                      color: AppColors.primary,
                       size: 16,
+                      color: AppColors.brandGreen800,
                     ),
                   ],
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

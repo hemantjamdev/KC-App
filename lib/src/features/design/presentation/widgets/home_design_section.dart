@@ -4,6 +4,7 @@ import '../../../../app/app_routes.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/widgets/app_full_screen_image_dialog.dart';
 import '../../domain/models/design_model.dart';
 
 /// Horizontal scrollable widget for "Recently Added" designs on Customer Home.
@@ -99,32 +100,70 @@ class _RecentDesignCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  design.thumbnailUrl != null
-                      ? Image.network(
-                          design.thumbnailUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => _fallbackImage(),
-                        )
-                      : _fallbackImage(),
-                  Positioned.fill(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            AppColors.background.withValues(alpha: 0.6),
-                          ],
-                          stops: const [0.5, 1.0],
+              child: GestureDetector(
+                onTap: () {
+                  final urls = design.imageUrls.isNotEmpty
+                      ? design.imageUrls
+                      : (design.thumbnailUrl != null ? [design.thumbnailUrl!] : <String>[]);
+                  if (urls.isNotEmpty) {
+                    AppFullScreenImageDialog.show(context, imageUrls: urls);
+                  }
+                },
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    design.thumbnailUrl != null
+                        ? Image.network(
+                            design.thumbnailUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => _fallbackImage(),
+                          )
+                        : _fallbackImage(),
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              AppColors.background.withValues(alpha: 0.6),
+                            ],
+                            stops: const [0.5, 1.0],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                    if (!design.isActive) ...[
+                      Container(
+                        color: Colors.black.withValues(alpha: 0.3),
+                      ),
+                      Positioned(
+                        top: AppSpacing.xs,
+                        left: AppSpacing.xs,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFDC2626),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Text(
+                            'OUT OF STOCK',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 8,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ),
             Padding(

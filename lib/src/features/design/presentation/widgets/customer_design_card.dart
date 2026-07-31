@@ -5,6 +5,8 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/models/design_model.dart';
 
+import '../../../../core/widgets/app_full_screen_image_dialog.dart';
+
 enum DesignCardVariant { compact, grid, featured, editorial }
 
 /// Reusable branded design card component for KC-App.
@@ -17,6 +19,7 @@ class CustomerDesignCard extends StatelessWidget {
     this.onTap,
     this.onFavoriteToggle,
     this.isFavorite = false,
+    this.isOutOfStock,
   });
 
   final DesignModel design;
@@ -25,6 +28,9 @@ class CustomerDesignCard extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onFavoriteToggle;
   final bool isFavorite;
+  final bool? isOutOfStock;
+
+  bool get _outOfStock => isOutOfStock ?? !design.isActive;
 
   Widget _buildPlaceholder() {
     return Container(
@@ -54,23 +60,76 @@ class CustomerDesignCard extends StatelessWidget {
     );
   }
 
-  Widget _buildImage(double? height) {
-    final imageUrl = design.thumbnailUrl ?? (design.imageUrls.isNotEmpty ? design.imageUrls.first : null);
+  Widget _buildImage(BuildContext context, double? height) {
+    final imageUrl =
+        design.thumbnailUrl ??
+        (design.imageUrls.isNotEmpty ? design.imageUrls.first : null);
+    final allUrls = design.imageUrls.isNotEmpty
+        ? design.imageUrls
+        : (imageUrl != null ? [imageUrl] : <String>[]);
 
-    return ClipRRect(
-      borderRadius: variant == DesignCardVariant.editorial
-          ? const BorderRadius.vertical(top: Radius.circular(16))
-          : AppRadius.borderMd,
-      child: SizedBox(
-        width: double.infinity,
-        height: height,
-        child: imageUrl != null && imageUrl.isNotEmpty
-            ? Image.network(
-                imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (c, o, s) => _buildPlaceholder(),
-              )
-            : _buildPlaceholder(),
+    return GestureDetector(
+      onTap: () {
+        if (allUrls.isNotEmpty) {
+          AppFullScreenImageDialog.show(context, imageUrls: allUrls);
+        }
+      },
+      child: ClipRRect(
+        borderRadius: variant == DesignCardVariant.editorial
+            ? const BorderRadius.vertical(top: Radius.circular(16))
+            : AppRadius.borderMd,
+        child: SizedBox(
+          width: double.infinity,
+          height: height,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              imageUrl != null && imageUrl.isNotEmpty
+                  ? Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (c, o, s) => _buildPlaceholder(),
+                    )
+                  : _buildPlaceholder(),
+
+              if (_outOfStock) ...[
+                Container(
+                  color: Colors.black.withValues(alpha: 0.35),
+                ),
+                Positioned(
+                  top: AppSpacing.xs,
+                  left: AppSpacing.xs,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFDC2626), // Vivid Red
+                      borderRadius: BorderRadius.circular(6),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Text(
+                      'OUT OF STOCK',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.6,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -90,12 +149,14 @@ class CustomerDesignCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildImage(100),
+              _buildImage(context, 100),
               Padding(
                 padding: const EdgeInsets.all(AppSpacing.xs),
                 child: Text(
                   design.name,
-                  style: AppTypography.caption.copyWith(fontWeight: FontWeight.bold),
+                  style: AppTypography.caption.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -118,7 +179,7 @@ class CustomerDesignCard extends StatelessWidget {
           ),
           child: Stack(
             children: [
-              Positioned.fill(child: _buildImage(null)),
+              Positioned.fill(child: _buildImage(context, null)),
               Positioned.fill(
                 child: Container(
                   decoration: BoxDecoration(
@@ -153,7 +214,9 @@ class CustomerDesignCard extends StatelessWidget {
                       ),
                     Text(
                       design.name,
-                      style: AppTypography.sectionTitle.copyWith(color: AppColors.surfaceWhite),
+                      style: AppTypography.sectionTitle.copyWith(
+                        color: AppColors.surfaceWhite,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -185,7 +248,7 @@ class CustomerDesignCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(child: _buildImage(null)),
+            Expanded(child: _buildImage(context, null)),
             Padding(
               padding: const EdgeInsets.all(AppSpacing.sm),
               child: Column(
@@ -194,7 +257,9 @@ class CustomerDesignCard extends StatelessWidget {
                   if (categoryName != null) ...[
                     Text(
                       categoryName!,
-                      style: AppTypography.caption.copyWith(color: AppColors.brandGreen700),
+                      style: AppTypography.caption.copyWith(
+                        color: AppColors.brandGreen700,
+                      ),
                     ),
                     const SizedBox(height: 2),
                   ],
@@ -204,7 +269,8 @@ class CustomerDesignCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  if (design.shortDescription != null && design.shortDescription!.isNotEmpty) ...[
+                  if (design.shortDescription != null &&
+                      design.shortDescription!.isNotEmpty) ...[
                     const SizedBox(height: 2),
                     Text(
                       design.shortDescription!,

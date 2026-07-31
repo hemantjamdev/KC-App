@@ -49,7 +49,7 @@ class NotificationPermissionDialog extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          const Text(
+          Text(
             'Stay Updated',
             style: AppTypography.cardTitle,
             textAlign: TextAlign.center,

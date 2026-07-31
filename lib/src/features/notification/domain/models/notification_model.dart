@@ -109,6 +109,8 @@ class NotificationModel {
   final String? createdBy;
   final String? updatedBy;
 
+  List<String> get targetUserIds => customerIds;
+
   NotificationModel copyWith({
     String? id,
     String? boutiqueId,

@@ -87,6 +87,17 @@ class CustomerFirestoreDataSource {
     }
   }
 
+  Stream<CustomerModel?> watchById(String customerId) {
+    return _collection
+        .doc(customerId)
+        .snapshots()
+        .map((doc) {
+          if (!doc.exists) return null;
+          return _fromFirestore(doc);
+        })
+        .handleError((_) => null);
+  }
+
   Future<CustomerModel?> fetchByFirebaseUid(String firebaseUid) async {
     try {
       final query = await _collection
@@ -101,6 +112,21 @@ class CustomerFirestoreDataSource {
     }
   }
 
+  Future<CustomerModel?> fetchByEmail(String email) async {
+    try {
+      final normalised = email.trim().toLowerCase();
+      final query = await _collection
+          .where('email', isEqualTo: normalised)
+          .limit(1)
+          .get();
+
+      if (query.docs.isEmpty) return null;
+      return _fromFirestore(query.docs.first);
+    } catch (e) {
+      throw Exception('Failed to fetch customer by email: $e');
+    }
+  }
+
   Future<List<CustomerModel>> fetchAll({
     String? boutiqueId,
     bool? isActive,
@@ -109,9 +135,6 @@ class CustomerFirestoreDataSource {
     try {
       Query<Map<String, dynamic>> query = _collection;
 
-      if (boutiqueId != null && boutiqueId.isNotEmpty) {
-        query = query.where('boutiqueIds', arrayContains: boutiqueId);
-      }
       if (isActive != null) {
         query = query.where('isActive', isEqualTo: isActive);
       }

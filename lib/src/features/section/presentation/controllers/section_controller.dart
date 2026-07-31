@@ -13,10 +13,10 @@ class SectionController extends ChangeNotifier {
     required String branchId,
     required DesignController designController,
     SectionFirestoreRepository? repository,
-  })  : _boutiqueId = boutiqueId,
-        _branchId = branchId,
-        _designController = designController,
-        _repository = repository ?? SectionFirestoreRepository();
+  }) : _boutiqueId = boutiqueId,
+       _branchId = branchId,
+       _designController = designController,
+       _repository = repository ?? SectionFirestoreRepository();
 
   final String _boutiqueId;
   final String _branchId;

@@ -52,16 +52,23 @@ class CustomerModel {
   final String? createdBy;
   final String? updatedBy;
 
+  /// Convenience getters for name & boutiqueId
+  String get name => displayName;
+  String get boutiqueId =>
+      boutiqueIds.isNotEmpty ? boutiqueIds.first : 'default';
+
   bool get isFirebaseLinked => firebaseUid != null && firebaseUid!.isNotEmpty;
 
   CustomerModel copyWith({
     String? id,
     String? firebaseUid,
     String? displayName,
+    String? name,
     String? email,
     String? phone,
     String? photoUrl,
     List<String>? boutiqueIds,
+    String? boutiqueId,
     List<String>? branchIds,
     CustomerSource? source,
     bool? isActive,
@@ -79,11 +86,13 @@ class CustomerModel {
     return CustomerModel(
       id: id ?? this.id,
       firebaseUid: clearFirebaseUid ? null : (firebaseUid ?? this.firebaseUid),
-      displayName: displayName ?? this.displayName,
+      displayName: name ?? displayName ?? this.displayName,
       email: clearEmail ? null : (email ?? this.email),
       phone: clearPhone ? null : (phone ?? this.phone),
       photoUrl: clearPhotoUrl ? null : (photoUrl ?? this.photoUrl),
-      boutiqueIds: boutiqueIds ?? this.boutiqueIds,
+      boutiqueIds: boutiqueId != null
+          ? [boutiqueId]
+          : (boutiqueIds ?? this.boutiqueIds),
       branchIds: branchIds ?? this.branchIds,
       source: source ?? this.source,
       isActive: isActive ?? this.isActive,

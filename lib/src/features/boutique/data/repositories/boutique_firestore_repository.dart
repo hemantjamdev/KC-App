@@ -32,8 +32,13 @@ class BoutiqueFirestoreRepository {
     final data = doc.data() ?? {};
     return BoutiqueModel(
       id: data['id'] as String? ?? doc.id,
-      name: data['name'] as String? ?? 'Boutique',
+      name: data['name'] as String? ?? 'Kapada Creation',
       subtitle: data['subtitle'] as String? ?? '',
+      phone: data['phone'] as String?,
+      email: data['email'] as String?,
+      address: data['address'] as String?,
+      openingHours: data['openingHours'] as String?,
+      description: data['description'] as String?,
       logoUrl: data['logoUrl'] as String?,
       isActive: data['isActive'] as bool? ?? true,
     );

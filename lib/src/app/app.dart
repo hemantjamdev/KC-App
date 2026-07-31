@@ -1,34 +1,21 @@
 import 'package:flutter/material.dart';
-import '../features/boutique/presentation/controllers/boutique_selection_controller.dart';
+import '../core/widgets/network_listener_wrapper.dart';
 import 'app_routes.dart';
 import 'app_theme.dart';
 
 /// Root application widget for Kapada Creation Customer application.
-class KcApp extends StatefulWidget {
+class KcApp extends StatelessWidget {
   const KcApp({super.key});
 
   @override
-  State<KcApp> createState() => _KcAppState();
-}
-
-class _KcAppState extends State<KcApp> {
-  final _selectionController = BoutiqueSelectionController();
-
-  @override
-  void dispose() {
-    _selectionController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return BoutiqueSelectionScope(
-      controller: _selectionController,
-      child: MaterialApp.router(
-        title: 'Kapada Creation',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        routerConfig: appRouter,
+    return MaterialApp.router(
+      title: 'Kapada Creation',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme,
+      routerConfig: appRouter,
+      builder: (context, child) => NetworkListenerWrapper(
+        child: child ?? const SizedBox.shrink(),
       ),
     );
   }

@@ -1,49 +1,46 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_radius.dart';
-import '../../../../core/constants/app_spacing.dart';
-import '../../../../core/widgets/app_button.dart';
-import '../../../../core/widgets/app_loading_indicator.dart';
-import 'package:kc_app/src/features/auth/presentation/controllers/customer_auth_controller.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-/// Edit Customer Profile Page for KC-App — allows editing display name and phone number.
-class CustomerProfileEditPage extends StatefulWidget {
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_toast.dart';
+import '../../../auth/application/providers/auth_providers.dart';
+import '../../application/providers/customer_providers.dart';
+import '../../domain/models/customer_model.dart';
+
+/// Edit Customer Profile Page for KC-App.
+/// Allows updating customer display name and contact phone number. Read-only email.
+class CustomerProfileEditPage extends ConsumerStatefulWidget {
   const CustomerProfileEditPage({super.key});
 
   @override
-  State<CustomerProfileEditPage> createState() =>
+  ConsumerState<CustomerProfileEditPage> createState() =>
       _CustomerProfileEditPageState();
 }
 
-class _CustomerProfileEditPageState extends State<CustomerProfileEditPage> {
+class _CustomerProfileEditPageState
+    extends ConsumerState<CustomerProfileEditPage> {
   final _formKey = GlobalKey<FormState>();
-  final _displayNameController = TextEditingController();
+  final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _nameFocusNode = FocusNode();
+  final _phoneFocusNode = FocusNode();
 
-  late final CustomerAuthController _authController;
   bool _isSaving = false;
   bool _hasChanges = false;
 
   @override
   void initState() {
     super.initState();
-    _authController = CustomerAuthController();
-    _authController.addListener(_onUpdate);
+    final customer = ref.read(customerProfileProvider).valueOrNull;
+    final user = ref.read(currentCustomerUserProvider);
 
-    final customer = _authController.currentCustomer;
-    final user = _authController.currentFirebaseUser;
-
-    _displayNameController.text =
-        customer?.displayName ?? user?.displayName ?? '';
+    _nameController.text =
+        customer?.name ?? user?.displayName ?? 'Valued Customer';
     _phoneController.text = customer?.phone ?? user?.phoneNumber ?? '';
 
-    _displayNameController.addListener(_markDirty);
+    _nameController.addListener(_markDirty);
     _phoneController.addListener(_markDirty);
-  }
-
-  void _onUpdate() {
-    if (mounted) setState(() {});
   }
 
   void _markDirty() {
@@ -52,202 +49,182 @@ class _CustomerProfileEditPageState extends State<CustomerProfileEditPage> {
 
   @override
   void dispose() {
-    _displayNameController.dispose();
+    _nameFocusNode.dispose();
+    _phoneFocusNode.dispose();
+    _nameController.dispose();
     _phoneController.dispose();
-    _authController.removeListener(_onUpdate);
-    _authController.dispose();
     super.dispose();
-  }
-
-  Future<bool> _onWillPop() async {
-    if (!_hasChanges) return true;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        shape: const RoundedRectangleBorder(borderRadius: AppRadius.borderLg),
-        title: const Text(
-          'Discard Changes?',
-          style: TextStyle(color: AppColors.textPrimary),
-        ),
-        content: const Text(
-          'Unsaved profile changes will be lost.',
-          style: TextStyle(color: AppColors.textMuted),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text(
-              'Keep Editing',
-              style: TextStyle(color: AppColors.primary),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text(
-              'Discard',
-              style: TextStyle(color: AppColors.error),
-            ),
-          ),
-        ],
-      ),
-    );
-    return confirmed == true;
   }
 
   Future<void> _save() async {
     if (_isSaving) return;
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    setState(() => _isSaving = true);
+    final customer = ref.read(customerProfileProvider).valueOrNull;
+    final user = ref.read(currentCustomerUserProvider);
 
-    final success = await _authController.updateProfile(
-      displayName: _displayNameController.text.trim(),
-      phone: _phoneController.text.trim(),
-    );
+    if (user == null) return;
+
+    setState(() => _isSaving = true);
+    final repo = ref.read(customerRepositoryProvider);
+    final now = DateTime.now();
+
+    final updated =
+        (customer ??
+                CustomerModel(
+                  id: user.uid,
+                  displayName: '',
+                  email: user.email ?? '',
+                  phone: '',
+                  boutiqueIds: const ['default'],
+                  branchIds: const [],
+                  source: CustomerSource.google,
+                  isActive: true,
+                  createdAt: now,
+                  updatedAt: now,
+                ))
+            .copyWith(
+              displayName: _nameController.text.trim(),
+              phone: _phoneController.text.trim(),
+              updatedAt: now,
+            );
+
+    await repo.updateCustomer(updated);
 
     if (!mounted) return;
     setState(() => _isSaving = false);
-
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile updated.'),
-          backgroundColor: AppColors.surfaceLight,
-          behavior: SnackBarBehavior.floating,
-          duration: Duration(seconds: 2),
-        ),
-      );
-      context.pop();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_authController.authError ?? 'Could not save profile.'),
-          backgroundColor: AppColors.surfaceLight,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
+    AppToast.show(
+      context,
+      'Profile updated successfully.',
+      type: ToastType.success,
+    );
+    Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
-    final customer = _authController.currentCustomer;
-    final user = _authController.currentFirebaseUser;
-    final email = customer?.email ?? user?.email ?? 'No email provided';
+    final user = ref.watch(currentCustomerUserProvider);
 
-    return PopScope(
-      canPop: !_hasChanges,
-      onPopInvokedWithResult: (didPop, _) async {
-        if (didPop) return;
-        final router = GoRouter.of(context);
-        final canLeave = await _onWillPop();
-        if (canLeave) router.pop();
-      },
-      child: Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(
-          title: const Text(
-            'Edit Profile',
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          leading: IconButton(
-            icon: const Icon(
-              Icons.arrow_back_rounded,
-              color: AppColors.textPrimary,
-            ),
-            onPressed: () async {
-              final router = GoRouter.of(context);
-              final canLeave = await _onWillPop();
-              if (canLeave) router.pop();
-            },
+    return Scaffold(
+      backgroundColor: AppColors.warmIvory,
+      appBar: AppBar(
+        backgroundColor: AppColors.brandGreen900,
+        foregroundColor: AppColors.surfaceWhite,
+        title: Text(
+          'Edit Customer Profile',
+          style: GoogleFonts.playfairDisplay(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: AppColors.surfaceWhite,
           ),
         ),
-        body: SafeArea(
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 480),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Read-only Email Field
-                      _field(
-                        'Email Address (Read-only)',
-                        Container(
-                          padding: const EdgeInsets.all(AppSpacing.md),
-                          decoration: BoxDecoration(
-                            color: AppColors.surfaceLight,
-                            borderRadius: AppRadius.borderMd,
-                            border: Border.all(color: AppColors.surfaceBorder),
-                          ),
-                          child: Text(
-                            email,
-                            style: const TextStyle(
-                              color: AppColors.textMuted,
-                              fontSize: 14,
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.all(20),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 500),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Read-only Email Field
+                    Text(
+                      'GOOGLE EMAIL (READ-ONLY)',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.mutedText,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: AppColors.softCream,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.borderSoft),
+                      ),
+                      child: Text(
+                        user?.email ?? 'No email address',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 14,
+                          color: AppColors.mutedText,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Display Name
+                    TextFormField(
+                      controller: _nameController,
+                      focusNode: _nameFocusNode,
+                      textInputAction: TextInputAction.next,
+                      onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_phoneFocusNode),
+                      style: GoogleFonts.montserrat(fontSize: 14),
+                      decoration: const InputDecoration(
+                        labelText: 'Customer Name *',
+                        hintText: 'e.g. Priya Sharma',
+                      ),
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) {
+                          return 'Name is required.';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Phone Number
+                    TextFormField(
+                      controller: _phoneController,
+                      focusNode: _phoneFocusNode,
+                      textInputAction: TextInputAction.done,
+                      onFieldSubmitted: (_) => FocusScope.of(context).unfocus(),
+                      style: GoogleFonts.montserrat(fontSize: 14),
+                      keyboardType: TextInputType.phone,
+                      decoration: const InputDecoration(
+                        labelText: 'Contact Phone Number',
+                        hintText: 'e.g. +91 98765 43210',
+                      ),
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: _isSaving
+                          ? const Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.brandGreen800,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : ElevatedButton(
+                              onPressed: _save,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.brandGreen900,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: Text(
+                                'Save Profile Changes',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.surfaceWhite,
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-
-                      // Display Name Input
-                      _field(
-                        'Display Name *',
-                        TextFormField(
-                          controller: _displayNameController,
-                          style: _fieldStyle,
-                          cursorColor: AppColors.primary,
-                          decoration: _dec('Enter your name'),
-                          validator: (v) {
-                            if (v == null || v.trim().isEmpty) {
-                              return 'Display name is required.';
-                            }
-                            if (v.trim().length < 2) {
-                              return 'Name must be at least 2 characters.';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-
-                      // Phone Input
-                      _field(
-                        'Phone Number (Optional)',
-                        TextFormField(
-                          controller: _phoneController,
-                          style: _fieldStyle,
-                          cursorColor: AppColors.primary,
-                          keyboardType: TextInputType.phone,
-                          decoration: _dec('e.g. +91 9876543210'),
-                          validator: (v) {
-                            if (v != null && v.trim().isNotEmpty) {
-                              if (v.trim().length < 7) {
-                                return 'Please enter a valid phone number.';
-                              }
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-
-                      const SizedBox(height: AppSpacing.xl),
-
-                      _isSaving
-                          ? const Center(child: AppLoadingIndicator(size: 36))
-                          : AppButton(text: 'Save Changes', onPressed: _save),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -256,57 +233,4 @@ class _CustomerProfileEditPageState extends State<CustomerProfileEditPage> {
       ),
     );
   }
-
-  Widget _field(String label, Widget child) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        label,
-        style: const TextStyle(
-          color: AppColors.textSecondary,
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-      const SizedBox(height: AppSpacing.xs),
-      child,
-    ],
-  );
-
-  static const TextStyle _fieldStyle = TextStyle(
-    color: AppColors.textPrimary,
-    fontSize: 14,
-  );
-
-  InputDecoration _dec(String hint) => InputDecoration(
-    hintText: hint,
-    hintStyle: const TextStyle(color: AppColors.textHint, fontSize: 14),
-    filled: true,
-    fillColor: AppColors.surface,
-    contentPadding: const EdgeInsets.symmetric(
-      horizontal: AppSpacing.md,
-      vertical: AppSpacing.md,
-    ),
-    border: const OutlineInputBorder(
-      borderRadius: AppRadius.borderMd,
-      borderSide: BorderSide(color: AppColors.surfaceBorder),
-    ),
-    enabledBorder: const OutlineInputBorder(
-      borderRadius: AppRadius.borderMd,
-      borderSide: BorderSide(color: AppColors.surfaceBorder),
-    ),
-    focusedBorder: const OutlineInputBorder(
-      borderRadius: AppRadius.borderMd,
-      borderSide: BorderSide(color: AppColors.primary, width: 1.5),
-    ),
-    errorBorder: const OutlineInputBorder(
-      borderRadius: AppRadius.borderMd,
-      borderSide: BorderSide(color: AppColors.error),
-    ),
-    focusedErrorBorder: const OutlineInputBorder(
-      borderRadius: AppRadius.borderMd,
-      borderSide: BorderSide(color: AppColors.error, width: 1.5),
-    ),
-    errorStyle: const TextStyle(color: AppColors.error, fontSize: 12),
-  );
 }

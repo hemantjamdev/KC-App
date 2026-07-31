@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/app_routes.dart';
-import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/app_toast.dart';
 import '../../domain/models/notification_model.dart';
 
 /// Navigation resolver for notification destinations with security & entity availability checks in KC-App.
@@ -28,7 +28,7 @@ abstract class NotificationDestinationResolver {
           _showUnavailable(context, 'This design is no longer available.');
           return;
         }
-        context.push(AppRoutes.customerAllDesigns);
+        context.push(AppRoutes.customerHome);
         return;
 
       case NotificationDestinationType.section:
@@ -50,12 +50,6 @@ abstract class NotificationDestinationResolver {
   }
 
   static void _showUnavailable(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppColors.surfaceLight,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    AppToast.show(context, message, type: ToastType.warning);
   }
 }

@@ -1,46 +1,41 @@
 import 'package:flutter/foundation.dart';
 
 enum StitchingOrderStatus {
-  received,
-  measurements,
-  cutting,
-  stitching,
-  qualityCheck,
-  ready,
+  requested,
+  accepted,
   completed;
+
+  static StitchingOrderStatus parse(String? raw) {
+    if (raw == null || raw.isEmpty) return StitchingOrderStatus.requested;
+    final normalized = raw.toLowerCase().trim();
+    return switch (normalized) {
+      'requested' || 'received' || 'measurements' => StitchingOrderStatus.requested,
+      'accepted' || 'cutting' || 'stitching' || 'qualitycheck' => StitchingOrderStatus.accepted,
+      'completed' || 'ready' => StitchingOrderStatus.completed,
+      _ => StitchingOrderStatus.requested,
+    };
+  }
 
   String get adminLabel {
     return switch (this) {
-      StitchingOrderStatus.received => 'Received',
-      StitchingOrderStatus.measurements => 'Measurements',
-      StitchingOrderStatus.cutting => 'Cutting',
-      StitchingOrderStatus.stitching => 'Stitching',
-      StitchingOrderStatus.qualityCheck => 'Quality Check',
-      StitchingOrderStatus.ready => 'Ready',
+      StitchingOrderStatus.requested => 'Requested',
+      StitchingOrderStatus.accepted => 'Accepted',
       StitchingOrderStatus.completed => 'Completed',
     };
   }
 
   String get customerLabel {
     return switch (this) {
-      StitchingOrderStatus.received => 'Order Received',
-      StitchingOrderStatus.measurements => 'Measurements Recorded',
-      StitchingOrderStatus.cutting => 'Fabric Cutting',
-      StitchingOrderStatus.stitching => 'Stitching in Progress',
-      StitchingOrderStatus.qualityCheck => 'Quality Check',
-      StitchingOrderStatus.ready => 'Ready for Collection',
+      StitchingOrderStatus.requested => 'Request Submitted',
+      StitchingOrderStatus.accepted => 'Accepted by Admin',
       StitchingOrderStatus.completed => 'Completed',
     };
   }
 
   double get progressFraction {
     return switch (this) {
-      StitchingOrderStatus.received => 0.14,
-      StitchingOrderStatus.measurements => 0.28,
-      StitchingOrderStatus.cutting => 0.42,
-      StitchingOrderStatus.stitching => 0.57,
-      StitchingOrderStatus.qualityCheck => 0.71,
-      StitchingOrderStatus.ready => 0.85,
+      StitchingOrderStatus.requested => 0.33,
+      StitchingOrderStatus.accepted => 0.66,
       StitchingOrderStatus.completed => 1.0,
     };
   }

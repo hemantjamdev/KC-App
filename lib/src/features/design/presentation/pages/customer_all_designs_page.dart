@@ -5,7 +5,6 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/widgets/app_loading_indicator.dart';
-import '../../../boutique/presentation/controllers/boutique_selection_controller.dart';
 import '../../../category/data/repositories/category_firestore_repository.dart';
 import '../../../category/domain/models/category_model.dart';
 import '../../domain/models/design_model.dart';
@@ -22,25 +21,22 @@ class CustomerAllDesignsPage extends StatefulWidget {
 class _CustomerAllDesignsPageState extends State<CustomerAllDesignsPage> {
   late DesignController _controller;
   final TextEditingController _searchController = TextEditingController();
-  final CategoryFirestoreRepository _categoryRepository = CategoryFirestoreRepository();
+  final CategoryFirestoreRepository _categoryRepository =
+      CategoryFirestoreRepository();
   List<CategoryModel> _categories = [];
   String? _selectedCategoryId;
 
   @override
   void initState() {
     super.initState();
-    final scope = BoutiqueSelectionScope.of(context);
-    final boutiqueId = scope.selectedBoutique?.id ?? '';
-    final branchId = scope.selectedBranch?.id ?? '';
-
     _controller = DesignController(
-      boutiqueId: boutiqueId,
-      branchId: branchId,
+      boutiqueId: 'boutique_01',
+      branchId: '',
       activeCategoryIds: [],
     );
     _controller.addListener(_onUpdate);
 
-    _initData(boutiqueId);
+    _initData('boutique_01');
   }
 
   Future<void> _initData(String boutiqueId) async {
@@ -74,39 +70,7 @@ class _CustomerAllDesignsPageState extends State<CustomerAllDesignsPage> {
     }
   }
 
-  Widget _categoryChip(String? id, String label) {
-    final selected = _selectedCategoryId == id;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedCategoryId = id;
-          _controller.filterByCategory(id);
-        });
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.xs,
-        ),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.primary : AppColors.surface,
-          borderRadius: AppRadius.borderPill,
-          border: Border.all(
-            color: selected ? AppColors.primary : AppColors.surfaceBorder,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: selected ? AppColors.background : AppColors.textMuted,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -222,39 +186,16 @@ class _CustomerAllDesignsPageState extends State<CustomerAllDesignsPage> {
                       },
                     ),
                   ),
-                  // Category filter chips
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.lg,
-                      vertical: AppSpacing.sm,
-                    ),
-                    child: Row(
-                      children: [
-                        _categoryChip(null, 'All'),
-                        ..._categories.map(
-                          (c) => Padding(
-                            padding: const EdgeInsets.only(left: AppSpacing.sm),
-                            child: _categoryChip(c.id, c.name),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  const SizedBox(height: AppSpacing.sm),
                   Expanded(
                     child: visible.isEmpty
                         ? _buildEmptyState()
-                        : GridView.builder(
+                        : ListView.separated(
                             padding: const EdgeInsets.all(AppSpacing.lg),
                             physics: const BouncingScrollPhysics(),
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  childAspectRatio: 0.72,
-                                  crossAxisSpacing: AppSpacing.md,
-                                  mainAxisSpacing: AppSpacing.md,
-                                ),
                             itemCount: visible.length,
+                            separatorBuilder: (context, index) =>
+                                const SizedBox(height: AppSpacing.md),
                             itemBuilder: (context, index) {
                               final design = visible[index];
                               return _AllDesignsCard(
@@ -322,49 +263,38 @@ class _AllDesignsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasImg = design.thumbnailUrl != null || design.imageUrls.isNotEmpty;
+    final imgUrl = design.thumbnailUrl ?? (design.imageUrls.isNotEmpty ? design.imageUrls.first : '');
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: AppRadius.borderLg,
           border: Border.all(color: AppColors.surfaceBorder),
         ),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Expanded(
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  design.thumbnailUrl != null
-                      ? Image.network(
-                          design.thumbnailUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => _fallbackImage(),
-                        )
-                      : _fallbackImage(),
-                  Positioned.fill(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            AppColors.background.withValues(alpha: 0.6),
-                          ],
-                          stops: const [0.5, 1.0],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: const Color(0xFF2E7D32).withValues(alpha: 0.2),
+                borderRadius: AppRadius.borderMd,
               ),
+              clipBehavior: Clip.antiAlias,
+              child: hasImg && imgUrl.startsWith('http')
+                  ? Image.network(
+                      imgUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => _fallbackImage(),
+                    )
+                  : _fallbackImage(),
             ),
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.sm + 2),
+            const SizedBox(width: 14),
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -372,7 +302,7 @@ class _AllDesignsCard extends StatelessWidget {
                     categoryName.toUpperCase(),
                     style: const TextStyle(
                       color: AppColors.primary,
-                      fontSize: 9,
+                      fontSize: 10,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1.0,
                     ),
@@ -384,24 +314,27 @@ class _AllDesignsCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       color: AppColors.textPrimary,
-                      fontSize: 13,
+                      fontSize: 15,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  if (design.shortDescription != null) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      design.shortDescription!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.textMuted,
-                        fontSize: 11,
-                      ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '₹${design.price.toInt()}',
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
                     ),
-                  ],
+                  ),
                 ],
               ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.textMuted,
+              size: 20,
             ),
           ],
         ),
@@ -411,9 +344,13 @@ class _AllDesignsCard extends StatelessWidget {
 
   Widget _fallbackImage() {
     return Container(
-      color: AppColors.surfaceLight,
+      color: const Color(0xFF2E7D32).withValues(alpha: 0.2),
       child: const Center(
-        child: Icon(Icons.style_outlined, color: AppColors.textMuted, size: 36),
+        child: Icon(
+          Icons.checkroom_rounded,
+          color: AppColors.textMuted,
+          size: 24,
+        ),
       ),
     );
   }

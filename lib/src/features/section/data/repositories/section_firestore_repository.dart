@@ -12,7 +12,6 @@ class SectionFirestoreRepository {
   Stream<List<SectionModel>> watchSections(String boutiqueId) {
     return _firestore
         .collection(FirestorePaths.sections)
-        .where('boutiqueId', isEqualTo: boutiqueId)
         .snapshots()
         .map((snapshot) {
           final list = snapshot.docs.map(_fromFirestore).toList();

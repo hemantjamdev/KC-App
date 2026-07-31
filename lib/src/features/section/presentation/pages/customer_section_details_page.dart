@@ -5,7 +5,6 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/widgets/app_loading_indicator.dart';
-import '../../../boutique/presentation/controllers/boutique_selection_controller.dart';
 import '../../../design/domain/models/design_model.dart';
 import '../../../design/presentation/controllers/design_controller.dart';
 import '../../domain/models/section_model.dart';
@@ -31,19 +30,15 @@ class _CustomerSectionDetailsPageState
   @override
   void initState() {
     super.initState();
-    final scope = BoutiqueSelectionScope.of(context);
-    final boutiqueId = scope.selectedBoutique?.id ?? '';
-    final branchId = scope.selectedBranch?.id ?? '';
-
     _designController = DesignController(
-      boutiqueId: boutiqueId,
-      branchId: branchId,
+      boutiqueId: 'boutique_01',
+      branchId: '',
       activeCategoryIds: [],
     );
 
     _sectionController = SectionController(
-      boutiqueId: boutiqueId,
-      branchId: branchId,
+      boutiqueId: 'boutique_01',
+      branchId: '',
       designController: _designController,
     );
 

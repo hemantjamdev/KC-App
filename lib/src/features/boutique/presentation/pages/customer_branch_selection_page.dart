@@ -4,6 +4,7 @@ import '../../../../app/app_routes.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/navigation/navigation_extensions.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_loading_indicator.dart';
 import '../../data/repositories/branch_firestore_repository.dart';
@@ -83,210 +84,218 @@ class _CustomerBranchSelectionPageState
       );
     }
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text(
-          'Select Branch',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+    return PopScope(
+      canPop: context.canPop(),
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        if (context.mounted) context.popOrGo(AppRoutes.customerSelectBoutique);
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          title: const Text(
+            'Select Branch',
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          leading: IconButton(
+            icon: const Icon(
+              Icons.arrow_back_rounded,
+              color: AppColors.textPrimary,
+            ),
+            onPressed: () => context.popOrGo(AppRoutes.customerSelectBoutique),
           ),
         ),
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_rounded,
-            color: AppColors.textPrimary,
-          ),
-          onPressed: () => context.go(AppRoutes.customerSelectBoutique),
-        ),
-      ),
-      body: SafeArea(
-        child: _isLoading
-            ? const Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    AppLoadingIndicator(size: 32),
-                    SizedBox(height: AppSpacing.md),
-                    Text(
-                      'Loading branch availability...',
-                      style: TextStyle(
-                        color: AppColors.textMuted,
-                        fontSize: 14,
+        body: SafeArea(
+          child: _isLoading
+              ? const Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AppLoadingIndicator(size: 32),
+                      SizedBox(height: AppSpacing.md),
+                      Text(
+                        'Loading branch availability...',
+                        style: TextStyle(
+                          color: AppColors.textMuted,
+                          fontSize: 14,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              )
-            : SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 480),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Selected Boutique Context Banner
-                        Container(
-                          padding: const EdgeInsets.all(AppSpacing.md),
-                          decoration: BoxDecoration(
-                            color: AppColors.surface,
-                            borderRadius: AppRadius.borderLg,
-                            border: Border.all(
-                              color: AppColors.primary.withValues(alpha: 0.3),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(
-                                  AppSpacing.xs + 2,
-                                ),
-                                decoration: const BoxDecoration(
-                                  color: AppColors.accentGlow,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.store_rounded,
-                                  color: AppColors.primary,
-                                  size: 20,
-                                ),
-                              ),
-                              const SizedBox(width: AppSpacing.md),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'SELECTED BOUTIQUE',
-                                      style: TextStyle(
-                                        color: AppColors.primary,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 1.2,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      selectedBoutique.name,
-                                      style: const TextStyle(
-                                        color: AppColors.textPrimary,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () => context.go(
-                                  AppRoutes.customerSelectBoutique,
-                                ),
-                                child: const Text(
-                                  'Change',
-                                  style: TextStyle(
-                                    color: AppColors.primary,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: AppSpacing.lg),
-
-                        const Text(
-                          'Select a branch to see locally available designs and catalogue items in your area.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: AppColors.textMuted,
-                            fontSize: 13,
-                            height: 1.35,
-                          ),
-                        ),
-
-                        const SizedBox(height: AppSpacing.xl),
-
-                        // Empty State
-                        if (_activeBranches.isEmpty)
+                    ],
+                  ),
+                )
+              : SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 480),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Selected Boutique Context Banner
                           Container(
-                            padding: const EdgeInsets.all(AppSpacing.xl),
+                            padding: const EdgeInsets.all(AppSpacing.md),
                             decoration: BoxDecoration(
                               color: AppColors.surface,
                               borderRadius: AppRadius.borderLg,
                               border: Border.all(
-                                color: AppColors.surfaceBorder,
+                                color: AppColors.primary.withValues(alpha: 0.3),
                               ),
                             ),
-                            child: Column(
+                            child: Row(
                               children: [
-                                const Icon(
-                                  Icons.location_off_rounded,
-                                  color: AppColors.textMuted,
-                                  size: 40,
-                                ),
-                                const SizedBox(height: AppSpacing.md),
-                                const Text(
-                                  'No active branches are available for this boutique.',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: AppColors.textPrimary,
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
+                                Container(
+                                  padding: const EdgeInsets.all(
+                                    AppSpacing.xs + 2,
+                                  ),
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.accentGlow,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.store_rounded,
+                                    color: AppColors.primary,
+                                    size: 20,
                                   ),
                                 ),
-                                const SizedBox(height: AppSpacing.lg),
-                                AppButton(
-                                  text: 'Choose another boutique',
-                                  variant: AppButtonVariant.secondary,
+                                const SizedBox(width: AppSpacing.md),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'SELECTED BOUTIQUE',
+                                        style: TextStyle(
+                                          color: AppColors.primary,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 1.2,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        selectedBoutique.name,
+                                        style: const TextStyle(
+                                          color: AppColors.textPrimary,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                TextButton(
                                   onPressed: () => context.go(
                                     AppRoutes.customerSelectBoutique,
+                                  ),
+                                  child: const Text(
+                                    'Change',
+                                    style: TextStyle(
+                                      color: AppColors.primary,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
-                          )
-                        else
-                          ListView.separated(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: _activeBranches.length,
-                            separatorBuilder: (context, index) =>
-                                const SizedBox(height: AppSpacing.md),
-                            itemBuilder: (context, index) {
-                              final branch = _activeBranches[index];
-                              final isSelected =
-                                  selectedBranch?.id == branch.id;
-
-                              return _CustomerBranchCard(
-                                branch: branch,
-                                isSelected: isSelected,
-                                onTap: () => controller.selectBranch(branch),
-                              );
-                            },
                           ),
 
-                        const SizedBox(height: AppSpacing.xxl),
+                          const SizedBox(height: AppSpacing.lg),
 
-                        // Start Exploring Primary Action
-                        if (_activeBranches.isNotEmpty)
-                          AppButton(
-                            text: 'Start Exploring',
-                            icon: Icons.explore_rounded,
-                            onPressed: selectedBranch == null
-                                ? null
-                                : () => context.go(AppRoutes.customerHome),
+                          const Text(
+                            'Select a branch to see locally available designs and catalogue items in your area.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: AppColors.textMuted,
+                              fontSize: 13,
+                              height: 1.35,
+                            ),
                           ),
-                      ],
+
+                          const SizedBox(height: AppSpacing.xl),
+
+                          // Empty State
+                          if (_activeBranches.isEmpty)
+                            Container(
+                              padding: const EdgeInsets.all(AppSpacing.xl),
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                borderRadius: AppRadius.borderLg,
+                                border: Border.all(
+                                  color: AppColors.surfaceBorder,
+                                ),
+                              ),
+                              child: Column(
+                                children: [
+                                  const Icon(
+                                    Icons.location_off_rounded,
+                                    color: AppColors.textMuted,
+                                    size: 40,
+                                  ),
+                                  const SizedBox(height: AppSpacing.md),
+                                  const Text(
+                                    'No active branches are available for this boutique.',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: AppColors.textPrimary,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: AppSpacing.lg),
+                                  AppButton(
+                                    text: 'Choose another boutique',
+                                    variant: AppButtonVariant.secondary,
+                                    onPressed: () => context.go(
+                                      AppRoutes.customerSelectBoutique,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          else
+                            ListView.separated(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: _activeBranches.length,
+                              separatorBuilder: (context, index) =>
+                                  const SizedBox(height: AppSpacing.md),
+                              itemBuilder: (context, index) {
+                                final branch = _activeBranches[index];
+                                final isSelected =
+                                    selectedBranch?.id == branch.id;
+
+                                return _CustomerBranchCard(
+                                  branch: branch,
+                                  isSelected: isSelected,
+                                  onTap: () => controller.selectBranch(branch),
+                                );
+                              },
+                            ),
+
+                          const SizedBox(height: AppSpacing.xxl),
+
+                          // Start Exploring Primary Action
+                          if (_activeBranches.isNotEmpty)
+                            AppButton(
+                              text: 'Start Exploring',
+                              icon: Icons.explore_rounded,
+                              onPressed: selectedBranch == null
+                                  ? null
+                                  : () => context.push(AppRoutes.customerHome),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
+        ),
       ),
     );
   }

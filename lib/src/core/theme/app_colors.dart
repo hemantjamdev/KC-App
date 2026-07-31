@@ -12,19 +12,22 @@ abstract class AppColors {
   static const Color brandGreen500 = Color(0xFF3B8F68);
   static const Color brandGreen100 = Color(0xFFDDEDE5);
   static const Color brandGreen50 = Color(0xFFF2F8F5);
+  static const Color brandGreen = brandGreen800;
 
   // Supporting Colors
-  static const Color warmIvory = Color(0xFFFFFBF5);
+  static const Color warmIvory = Color(0xFFFAF7F2);
   static const Color softCream = Color(0xFFF7F1E7);
   static const Color surfaceWhite = Color(0xFFFFFFFF);
   static const Color charcoal = Color(0xFF1D2420);
   static const Color mutedText = Color(0xFF6F7973);
-  static const Color borderSoft = Color(0xFFDCE4DF);
+  static const Color borderSoft = Color(0xFFEAE5DC);
 
-  // Semantic Status Colors
-  static const Color success = Color(0xFF2F7D57);
-  static const Color warning = Color(0xFFB7791F);
-  static const Color error = Color(0xFFB43D3D);
+  // Brand Accents & Semantic Status Colors
+  static const Color goldAccent = Color(0xFFC5A880);
+  static const Color goldBronze = Color(0xFFA67C52);
+  static const Color success = Color(0xFF10B981);
+  static const Color warning = Color(0xFFD97706);
+  static const Color error = Color(0xFFDC2626);
   static const Color mutedGold = Color(0xFFB79A5E);
   static const Color accentGlow = Color(0x263B8F68);
 

@@ -12,9 +12,9 @@ class CustomerAuthController extends ChangeNotifier {
     FirebaseAuth? auth,
     GoogleAuthService? googleAuthService,
     CustomerRepository? repository,
-  })  : _auth = auth ?? FirebaseAuth.instance,
-        _googleAuthService = googleAuthService ?? GoogleAuthService(),
-        _repository = repository ?? CustomerRepositoryImpl() {
+  }) : _auth = auth ?? FirebaseAuth.instance,
+       _googleAuthService = googleAuthService ?? GoogleAuthService(),
+       _repository = repository ?? CustomerRepositoryImpl() {
     restoreSession();
   }
 

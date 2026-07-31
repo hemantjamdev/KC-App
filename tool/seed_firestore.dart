@@ -6,9 +6,7 @@ import 'package:kc_app/firebase_options.dart';
 /// Standalone development-only Firestore database seed utility.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   final db = FirebaseFirestore.instance;
 
@@ -56,7 +54,8 @@ Future<void> main() async {
     'boutiqueId': boutiqueId,
     'name': 'Bridal Lehengas',
     'slug': 'bridal-lehengas',
-    'description': 'Handcrafted designer lehengas for weddings and grand events.',
+    'description':
+        'Handcrafted designer lehengas for weddings and grand events.',
     'sortOrder': 1,
     'isActive': true,
     'createdAt': FieldValue.serverTimestamp(),
@@ -85,8 +84,10 @@ Future<void> main() async {
     'categoryId': category1Id,
     'name': 'Royal Velvet Zardozi Lehenga',
     'slug': 'royal-velvet-zardozi-lehenga',
-    'shortDescription': 'Rich crimson velvet lehenga with handcrafted gold zardozi.',
-    'description': 'An exquisite bridal piece tailored in plush silk velvet, detailed with intricate metallic embroidery.',
+    'shortDescription':
+        'Rich crimson velvet lehenga with handcrafted gold zardozi.',
+    'description':
+        'An exquisite bridal piece tailored in plush silk velvet, detailed with intricate metallic embroidery.',
     'imageUrls': [],
     'tags': ['bridal', 'velvet', 'zardozi'],
     'searchKeywords': ['lehenga', 'bridal', 'red', 'zardozi'],
@@ -104,7 +105,8 @@ Future<void> main() async {
     'name': 'Pure Kanjeevaram Gold Silk Saree',
     'slug': 'pure-kanjeevaram-gold-silk-saree',
     'shortDescription': 'Traditional woven silk saree with pure zari border.',
-    'description': 'Woven with traditional heritage motifs in vibrant emerald green and gold.',
+    'description':
+        'Woven with traditional heritage motifs in vibrant emerald green and gold.',
     'imageUrls': [],
     'tags': ['silk', 'saree', 'traditional'],
     'searchKeywords': ['saree', 'silk', 'emerald', 'kanjeevaram'],

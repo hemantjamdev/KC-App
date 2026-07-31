@@ -18,13 +18,13 @@ enum GoogleAuthErrorCategory {
 /// Diagnostic result from Google Sign-In authentication.
 class GoogleAuthResult {
   const GoogleAuthResult.success(this.user)
-      : isSuccess = true,
-        errorCategory = null,
-        errorMessage = null;
+    : isSuccess = true,
+      errorCategory = null,
+      errorMessage = null;
 
   const GoogleAuthResult.failure(this.errorCategory, this.errorMessage)
-      : isSuccess = false,
-        user = null;
+    : isSuccess = false,
+      user = null;
 
   final bool isSuccess;
   final User? user;
@@ -34,11 +34,9 @@ class GoogleAuthResult {
 
 /// Service dedicated to Google Sign-In and Firebase Auth integration.
 class GoogleAuthService {
-  GoogleAuthService({
-    FirebaseAuth? auth,
-    GoogleSignIn? googleSignIn,
-  })  : _auth = auth ?? FirebaseAuth.instance,
-        _googleSignIn = googleSignIn ?? GoogleSignIn();
+  GoogleAuthService({FirebaseAuth? auth, GoogleSignIn? googleSignIn})
+    : _auth = auth ?? FirebaseAuth.instance,
+      _googleSignIn = googleSignIn ?? GoogleSignIn();
 
   final FirebaseAuth _auth;
   final GoogleSignIn _googleSignIn;
@@ -90,18 +88,24 @@ class GoogleAuthService {
     } on FirebaseAuthException catch (e) {
       _isOperationInProgress = false;
       if (kDebugMode) {
-        debugPrint('[GoogleAuthService] FirebaseAuthException: ${e.code} - ${e.message}');
+        debugPrint(
+          '[GoogleAuthService] FirebaseAuthException: ${e.code} - ${e.message}',
+        );
       }
 
       final category = switch (e.code) {
-        'account-exists-with-different-credential' => GoogleAuthErrorCategory.credentialConflict,
+        'account-exists-with-different-credential' =>
+          GoogleAuthErrorCategory.credentialConflict,
         'user-disabled' => GoogleAuthErrorCategory.accountDisabled,
         'network-request-failed' => GoogleAuthErrorCategory.network,
         'invalid-credential' => GoogleAuthErrorCategory.developerConfiguration,
         _ => GoogleAuthErrorCategory.unknown,
       };
 
-      return GoogleAuthResult.failure(category, e.message ?? 'Authentication failed.');
+      return GoogleAuthResult.failure(
+        category,
+        e.message ?? 'Authentication failed.',
+      );
     } catch (e) {
       _isOperationInProgress = false;
       if (kDebugMode) {
@@ -114,7 +118,8 @@ class GoogleAuthService {
           GoogleAuthErrorCategory.network,
           'Network connection error. Please check your internet connection.',
         );
-      } else if (errorStr.contains('api_exception') || errorStr.contains('10')) {
+      } else if (errorStr.contains('api_exception') ||
+          errorStr.contains('10')) {
         return const GoogleAuthResult.failure(
           GoogleAuthErrorCategory.developerConfiguration,
           'Developer configuration error. Verify SHA-1 fingerprint in Firebase Console.',

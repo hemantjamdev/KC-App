@@ -1,376 +1,514 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_radius.dart';
-import '../../../../core/constants/app_spacing.dart';
-import '../../../../core/widgets/app_button.dart';
-import '../../../boutique/presentation/controllers/boutique_selection_controller.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_full_screen_image_dialog.dart';
+import '../../../../core/widgets/app_toast.dart';
+import '../../../../core/widgets/stitch_line_divider.dart';
+import '../../../auth/application/providers/auth_providers.dart';
+import '../../../auth/presentation/widgets/google_auth_bottom_sheet.dart';
+import '../../application/providers/favorite_providers.dart';
 import '../../domain/models/design_model.dart';
 
-/// Customer Design Details Page for KC-App — high-end editorial display of design details.
-class CustomerDesignDetailsPage extends StatefulWidget {
+/// Ready-made product details page for Kapada Creation Customer App.
+/// Pure ready-made apparel showcase: images, price, description, colors, sizes, favorite, share.
+class CustomerDesignDetailsPage extends ConsumerStatefulWidget {
   const CustomerDesignDetailsPage({super.key, required this.design});
+
   final DesignModel design;
 
   @override
-  State<CustomerDesignDetailsPage> createState() =>
+  ConsumerState<CustomerDesignDetailsPage> createState() =>
       _CustomerDesignDetailsPageState();
 }
 
-class _CustomerDesignDetailsPageState extends State<CustomerDesignDetailsPage> {
-  int _activeImageIndex = 0;
-  late final PageController _pageController;
-
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController();
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  List<String> get _allImages {
-    final list = <String>[];
-    if (widget.design.thumbnailUrl != null) {
-      list.add(widget.design.thumbnailUrl!);
-    }
-    list.addAll(widget.design.imageUrls);
-    if (list.isEmpty) return ['https://via.placeholder.com/600x800'];
-    return list;
-  }
-
-  String _getCategoryName() {
-    return 'Collection';
-  }
-
-  void _onSaveToFavourites() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Favourites will be connected in a later slice.'),
-        backgroundColor: AppColors.surfaceLight,
-        behavior: SnackBarBehavior.floating,
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
-
-  void _onAskBoutique() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Boutique enquiry will be connected later.'),
-        backgroundColor: AppColors.surfaceLight,
-        behavior: SnackBarBehavior.floating,
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
+class _CustomerDesignDetailsPageState
+    extends ConsumerState<CustomerDesignDetailsPage> {
+  int _currentImageIndex = 0;
 
   @override
   Widget build(BuildContext context) {
-    final scope = BoutiqueSelectionScope.of(context);
-    final boutique = scope.selectedBoutique;
-    final branch = scope.selectedBranch;
-    final images = _allImages;
+    final isFavorited = ref.watch(isDesignFavoritedProvider(widget.design.id));
+    final isAuthenticated = ref.watch(isAuthenticatedProvider);
+
+    final imageUrls = widget.design.imageUrls.isNotEmpty
+        ? widget.design.imageUrls
+        : (widget.design.thumbnailUrl != null &&
+                  widget.design.thumbnailUrl!.isNotEmpty
+              ? [widget.design.thumbnailUrl!]
+              : <String>[]);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Stack(
-        children: [
-          CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              // Hero Image Gallery Header
-              SliverAppBar(
-                expandedHeight: 420,
-                pinned: true,
-                backgroundColor: AppColors.background,
-                leading: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.xs),
-                  child: CircleAvatar(
-                    backgroundColor: AppColors.background.withValues(
-                      alpha: 0.7,
+      backgroundColor: AppColors.warmIvory,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // ── Top Navigation Bar ──────────────────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.arrow_back_rounded,
+                      color: AppColors.charcoal,
                     ),
-                    child: IconButton(
-                      icon: const Icon(
-                        Icons.arrow_back_rounded,
-                        color: AppColors.textPrimary,
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  Expanded(
+                    child: Text(
+                      widget.design.name,
+                      style: GoogleFonts.playfairDisplay(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.charcoal,
                       ),
-                      onPressed: () => context.pop(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                ),
-                flexibleSpace: FlexibleSpaceBar(
-                  background: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      images.isNotEmpty
-                          ? PageView.builder(
-                              controller: _pageController,
-                              itemCount: images.length,
-                              onPageChanged: (i) =>
-                                  setState(() => _activeImageIndex = i),
-                              itemBuilder: (context, i) {
-                                return Image.network(
-                                  images[i],
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, _, _) => _fallbackImage(),
-                                );
-                              },
-                            )
-                          : _fallbackImage(),
-                      // Bottom gradient overlay
-                      Positioned.fill(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.transparent,
-                                AppColors.background.withValues(alpha: 0.95),
-                              ],
-                              stops: const [0.7, 1.0],
-                            ),
-                          ),
-                        ),
-                      ),
-                      // Carousel Indicator dots
-                      if (images.length > 1)
-                        Positioned(
-                          bottom: AppSpacing.md,
-                          left: 0,
-                          right: 0,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: List.generate(
-                              images.length,
-                              (index) => AnimatedContainer(
-                                duration: const Duration(milliseconds: 200),
-                                margin: const EdgeInsets.symmetric(
-                                  horizontal: 4,
-                                ),
-                                width: _activeImageIndex == index ? 20 : 6,
-                                height: 6,
-                                decoration: BoxDecoration(
-                                  color: _activeImageIndex == index
-                                      ? AppColors.primary
-                                      : AppColors.textMuted.withValues(
-                                          alpha: 0.5,
-                                        ),
-                                  borderRadius: AppRadius.borderPill,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
+                  IconButton(
+                    icon: Icon(
+                      isFavorited
+                          ? Icons.favorite_rounded
+                          : Icons.favorite_outline_rounded,
+                      color: isFavorited
+                          ? const Color(0xFFCC4B37)
+                          : AppColors.charcoal,
+                    ),
+                    onPressed: () async {
+                      if (!isAuthenticated) {
+                        final loggedIn = await GoogleAuthBottomSheet.show(
+                          context,
+                          title: 'Save Favorites',
+                          message:
+                              'Sign in with Google to save styles you love.',
+                        );
+                        if (!loggedIn) return;
+                      }
+                      await ref
+                          .read(favoriteMutationProvider.notifier)
+                          .toggleFavorite(widget.design.id);
+                    },
                   ),
-                ),
-              ),
-              // Design Content Body
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.lg,
-                    AppSpacing.md,
-                    AppSpacing.lg,
-                    120, // Space for bottom fixed action buttons
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Category Tag
-                      Text(
-                        _getCategoryName().toUpperCase(),
-                        style: const TextStyle(
-                          color: AppColors.primary,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      // Design Name
-                      Text(
-                        widget.design.name,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      // Boutique & Branch Context Pill
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.md,
-                          vertical: AppSpacing.xs + 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: AppRadius.borderPill,
-                          border: Border.all(color: AppColors.surfaceBorder),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.storefront_rounded,
-                              color: AppColors.primary,
-                              size: 16,
-                            ),
-                            const SizedBox(width: AppSpacing.xs),
-                            Text(
-                              '${boutique?.name ?? ''} • ${branch?.name ?? ''}',
-                              style: const TextStyle(
-                                color: AppColors.textMuted,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (widget.design.shortDescription != null) ...[
-                        const SizedBox(height: AppSpacing.lg),
-                        Text(
-                          widget.design.shortDescription!,
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 15,
-                            fontStyle: FontStyle.italic,
-                            height: 1.4,
-                          ),
-                        ),
-                      ],
-                      if (widget.design.description != null) ...[
-                        const SizedBox(height: AppSpacing.lg),
-                        const Text(
-                          'Design Overview',
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                        Text(
-                          widget.design.description!,
-                          style: const TextStyle(
-                            color: AppColors.textMuted,
-                            fontSize: 14,
-                            height: 1.6,
-                          ),
-                        ),
-                      ],
-                      if (widget.design.tags.isNotEmpty) ...[
-                        const SizedBox(height: AppSpacing.xl),
-                        const Text(
-                          'Style Tags',
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                        Wrap(
-                          spacing: AppSpacing.sm,
-                          runSpacing: AppSpacing.xs,
-                          children: widget.design.tags
-                              .map(
-                                (t) => Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: AppSpacing.md,
-                                    vertical: AppSpacing.xs,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.surfaceLight,
-                                    borderRadius: AppRadius.borderPill,
-                                    border: Border.all(
-                                      color: AppColors.surfaceBorder,
-                                    ),
-                                  ),
-                                  child: Text(
-                                    '#$t',
-                                    style: const TextStyle(
-                                      color: AppColors.textMuted,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          // Bottom Fixed Action Bar
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: Container(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                border: const Border(
-                  top: BorderSide(color: AppColors.surfaceBorder),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    blurRadius: 16,
-                    offset: const Offset(0, -4),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.share_outlined,
+                      color: AppColors.charcoal,
+                    ),
+                    onPressed: () {
+                      AppToast.show(
+                        context,
+                        'Sharing "${widget.design.name}"...',
+                        type: ToastType.info,
+                      );
+                    },
                   ),
                 ],
               ),
-              child: SafeArea(
-                top: false,
-                child: Row(
+            ),
+
+            // ── Scrollable Body ─────────────────────────────────
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      flex: 2,
-                      child: AppButton(
-                        text: 'Save to Favourites',
-                        icon: Icons.favorite_border_rounded,
-                        onPressed: _onSaveToFavourites,
+                    // ── Image Gallery Carousel ─────────────────────────
+                    SizedBox(
+                      height: 380,
+                      child: Stack(
+                        children: [
+                          Positioned.fill(
+                            child: imageUrls.isNotEmpty
+                                ? PageView.builder(
+                                    itemCount: imageUrls.length,
+                                    onPageChanged: (idx) {
+                                      setState(() => _currentImageIndex = idx);
+                                    },
+                                    itemBuilder: (ctx, idx) {
+                                      return GestureDetector(
+                                        onTap: () => _openFullscreenGallery(
+                                          context,
+                                          imageUrls,
+                                          idx,
+                                        ),
+                                        child: CachedNetworkImage(
+                                          imageUrl: imageUrls[idx],
+                                          fit: BoxFit.cover,
+                                          placeholder: (context, url) =>
+                                              Container(
+                                                color: AppColors.softCream,
+                                                child: const Center(
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                        color: AppColors
+                                                            .brandGreen800,
+                                                        strokeWidth: 2,
+                                                      ),
+                                                ),
+                                              ),
+                                          errorWidget: (context, url, error) =>
+                                              Container(
+                                                color: AppColors.softCream,
+                                                child: const Center(
+                                                  child: Icon(
+                                                    Icons.checkroom_rounded,
+                                                    size: 48,
+                                                    color: AppColors.mutedText,
+                                                  ),
+                                                ),
+                                              ),
+                                        ),
+                                      );
+                                    },
+                                  )
+                                : Container(
+                                    color: AppColors.softCream,
+                                    child: const Center(
+                                      child: Icon(
+                                        Icons.checkroom_rounded,
+                                        size: 48,
+                                        color: AppColors.mutedText,
+                                      ),
+                                    ),
+                                  ),
+                          ),
+
+                          // Image Page Indicator
+                          if (imageUrls.length > 1)
+                            Positioned(
+                              bottom: 12,
+                              left: 0,
+                              right: 0,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: List.generate(imageUrls.length, (
+                                  idx,
+                                ) {
+                                  final isActive = idx == _currentImageIndex;
+                                  return Container(
+                                    width: isActive ? 16 : 6,
+                                    height: 6,
+                                    margin: const EdgeInsets.symmetric(
+                                      horizontal: 3,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isActive
+                                          ? AppColors.surfaceWhite
+                                          : AppColors.surfaceWhite.withValues(
+                                              alpha: 0.5,
+                                            ),
+                                      borderRadius: BorderRadius.circular(3),
+                                    ),
+                                  );
+                                }),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      flex: 1,
-                      child: AppButton(
-                        text: 'Ask Boutique',
-                        variant: AppButtonVariant.secondary,
-                        onPressed: _onAskBoutique,
+
+                    // ── Details Section ────────────────────────────────
+                    Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Availability & Category Row
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: widget.design.isActive
+                                      ? AppColors.success.withValues(
+                                          alpha: 0.12,
+                                        )
+                                      : AppColors.error.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: widget.design.isActive
+                                        ? AppColors.success.withValues(
+                                            alpha: 0.3,
+                                          )
+                                        : AppColors.error.withValues(
+                                            alpha: 0.3,
+                                          ),
+                                  ),
+                                ),
+                                child: Text(
+                                  widget.design.isActive
+                                      ? 'AVAILABLE IN STUDIO'
+                                      : 'OUT OF STOCK',
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: widget.design.isActive
+                                        ? AppColors.success
+                                        : AppColors.error,
+                                    letterSpacing: 0.8,
+                                  ),
+                                ),
+                              ),
+
+                              Text(
+                                'Kapada Creation Studio',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.mutedText,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 14),
+
+                          // Product Title
+                          Text(
+                            widget.design.name,
+                            style: GoogleFonts.playfairDisplay(
+                              fontSize: 26,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.charcoal,
+                              height: 1.2,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+
+                          // Price
+                          if (widget.design.price > 0)
+                            Text(
+                              '₹${widget.design.price.toStringAsFixed(0)}',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.brandGreen900,
+                              ),
+                            )
+                          else
+                            Text(
+                              'Bespoke Pricing in Studio',
+                              style: GoogleFonts.playfairDisplay(
+                                fontSize: 16,
+                                fontStyle: FontStyle.italic,
+                                color: AppColors.mutedGold,
+                              ),
+                            ),
+
+                          const StitchLineDivider(
+                            margin: EdgeInsets.symmetric(vertical: 20),
+                          ),
+
+                          // Artisan Note / Description
+                          if (widget.design.shortDescription != null &&
+                              widget.design.shortDescription!.isNotEmpty) ...[
+                            Text(
+                              "ARTISAN'S NOTE",
+                              style: GoogleFonts.montserrat(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.mutedText,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              widget.design.shortDescription!,
+                              style: GoogleFonts.montserrat(
+                                fontSize: 13,
+                                color: AppColors.charcoal,
+                                height: 1.5,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+
+                          if (widget.design.description != null &&
+                              widget.design.description!.isNotEmpty) ...[
+                            Text(
+                              'DESCRIPTION & CRAFTSMANSHIP',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.mutedText,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              widget.design.description!,
+                              style: GoogleFonts.montserrat(
+                                fontSize: 13,
+                                color: AppColors.mutedText,
+                                height: 1.5,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+
+                          // Colors Swatches (Visual Swatches, not code text)
+                          if (widget.design.colors.isNotEmpty) ...[
+                            Text(
+                              'AVAILABLE COLORS',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.mutedText,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Wrap(
+                              spacing: 12,
+                              runSpacing: 12,
+                              children: widget.design.colors.map((colorStr) {
+                                Color swatchColor = AppColors.brandGreen800;
+                                try {
+                                  String clean = colorStr.trim().replaceAll('#', '');
+                                  if (clean.startsWith('0x')) clean = clean.substring(2);
+                                  if (clean.length == 6) clean = 'FF$clean';
+                                  swatchColor = Color(int.parse(clean, radix: 16));
+                                } catch (_) {}
+
+                                return Tooltip(
+                                  message: colorStr,
+                                  child: Container(
+                                    width: 36,
+                                    height: 36,
+                                    decoration: BoxDecoration(
+                                      color: swatchColor,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: AppColors.borderSoft,
+                                        width: 1.5,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.12),
+                                          blurRadius: 5,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+
+                          // Sizes Tags
+                          if (widget.design.sizes.isNotEmpty) ...[
+                            Text(
+                              'AVAILABLE TAILORED SIZES',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.mutedText,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: widget.design.sizes.map((size) {
+                                return Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.brandGreen900,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      size,
+                                      style: GoogleFonts.montserrat(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.surfaceWhite,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+
+                          // Boutique Info Note
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: AppColors.softCream,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: AppColors.borderSoft),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.storefront_rounded,
+                                  color: AppColors.brandGreen800,
+                                  size: 24,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Available at Physical Studio',
+                                        style: GoogleFonts.montserrat(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.charcoal,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Visit Kapada Creation to try on or request custom tailoring based on this design.',
+                                        style: GoogleFonts.montserrat(
+                                          fontSize: 11,
+                                          color: AppColors.mutedText,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
+                    const SizedBox(height: 32),
                   ],
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _fallbackImage() {
-    return Container(
-      color: AppColors.surfaceLight,
-      child: const Center(
-        child: Icon(Icons.style_outlined, color: AppColors.textMuted, size: 64),
-      ),
+  void _openFullscreenGallery(
+    BuildContext context,
+    List<String> urls,
+    int initialIndex,
+  ) {
+    AppFullScreenImageDialog.show(
+      context,
+      imageUrls: urls,
+      initialIndex: initialIndex,
     );
   }
 }

@@ -8,8 +8,8 @@ class CategoryController extends ChangeNotifier {
   CategoryController({
     required String boutiqueId,
     CategoryFirestoreRepository? repository,
-  })  : _boutiqueId = boutiqueId,
-        _repository = repository ?? CategoryFirestoreRepository();
+  }) : _boutiqueId = boutiqueId,
+       _repository = repository ?? CategoryFirestoreRepository();
 
   final String _boutiqueId;
   final CategoryFirestoreRepository _repository;

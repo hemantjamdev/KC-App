@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:kc_app/src/features/auth/presentation/controllers/customer_auth_controller.dart';
-import 'package:kc_app/src/features/boutique/presentation/controllers/boutique_selection_controller.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:kc_app/src/features/auth/application/providers/auth_providers.dart';
+import 'package:kc_app/src/features/notification/application/providers/notification_providers.dart';
 import 'package:kc_app/src/features/notification/domain/models/notification_model.dart';
-import 'package:kc_app/src/features/notification/presentation/controllers/notification_controller.dart';
 import 'package:kc_app/src/features/notification/presentation/navigation/notification_destination_resolver.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/kc_app_bar.dart';
 
 /// Customer Notification Details Page — displays notification content and destination action.
-class CustomerNotificationDetailsPage extends StatefulWidget {
+class CustomerNotificationDetailsPage extends ConsumerStatefulWidget {
   const CustomerNotificationDetailsPage({
     super.key,
     required this.notification,
@@ -20,43 +21,23 @@ class CustomerNotificationDetailsPage extends StatefulWidget {
   final NotificationModel notification;
 
   @override
-  State<CustomerNotificationDetailsPage> createState() =>
+  ConsumerState<CustomerNotificationDetailsPage> createState() =>
       _CustomerNotificationDetailsPageState();
 }
 
 class _CustomerNotificationDetailsPageState
-    extends State<CustomerNotificationDetailsPage> {
-  late final CustomerAuthController _authController;
-  NotificationController? _controller;
-
+    extends ConsumerState<CustomerNotificationDetailsPage> {
   @override
   void initState() {
     super.initState();
-    _authController = CustomerAuthController();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final scope = BoutiqueSelectionScope.of(context);
-    final boutiqueId = scope.selectedBoutique?.id ?? 'boutique_01';
-    final branchId = scope.selectedBranch?.id;
-    final customerId = _authController.currentCustomer?.id ?? 'cust_01';
-
-    _controller = NotificationController(
-      boutiqueId: boutiqueId,
-      branchId: branchId,
-      authenticatedCustomerId: customerId,
-    );
-    // Auto mark read on view
-    _controller?.markAsRead(widget.notification.id);
-  }
-
-  @override
-  void dispose() {
-    _controller?.dispose();
-    _authController.dispose();
-    super.dispose();
+    Future.microtask(() {
+      final user = ref.read(currentCustomerUserProvider);
+      if (user != null) {
+        ref
+            .read(notificationRepositoryProvider)
+            .markAsRead(widget.notification.id, user.uid);
+      }
+    });
   }
 
   String _formatDate(DateTime? dt) {
@@ -67,28 +48,15 @@ class _CustomerNotificationDetailsPageState
   @override
   Widget build(BuildContext context) {
     final notif = widget.notification;
+    final user = ref.watch(currentCustomerUserProvider);
     final hasDestination =
         notif.relatedEntityType != null &&
         notif.relatedEntityType != NotificationDestinationType.none;
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          notif.type.label,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_rounded,
-            color: AppColors.textPrimary,
-          ),
-          onPressed: () => context.pop(),
-        ),
+      appBar: KCAppBar(
+        title: notif.type.label,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -128,7 +96,7 @@ class _CustomerNotificationDetailsPageState
                               ),
                               child: Text(
                                 notif.type.label,
-                                style: const TextStyle(
+                                style: GoogleFonts.montserrat(
                                   color: AppColors.primary,
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
@@ -138,7 +106,7 @@ class _CustomerNotificationDetailsPageState
                             const Spacer(),
                             Text(
                               _formatDate(notif.publishedAt ?? notif.createdAt),
-                              style: const TextStyle(
+                              style: GoogleFonts.montserrat(
                                 color: AppColors.textHint,
                                 fontSize: 12,
                               ),
@@ -148,16 +116,16 @@ class _CustomerNotificationDetailsPageState
                         const SizedBox(height: AppSpacing.md),
                         Text(
                           notif.title,
-                          style: const TextStyle(
+                          style: GoogleFonts.playfairDisplay(
                             color: AppColors.textPrimary,
-                            fontSize: 18,
+                            fontSize: 20,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         const SizedBox(height: AppSpacing.sm),
                         Text(
                           notif.body,
-                          style: const TextStyle(
+                          style: GoogleFonts.montserrat(
                             color: AppColors.textMuted,
                             fontSize: 14,
                             height: 1.5,
@@ -178,8 +146,7 @@ class _CustomerNotificationDetailsPageState
                         NotificationDestinationResolver.navigateToDestination(
                           context,
                           notif,
-                          authenticatedCustomerId:
-                              _authController.currentCustomer?.id ?? 'cust_01',
+                          authenticatedCustomerId: user?.uid ?? '',
                         );
                       },
                     ),

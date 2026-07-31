@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
-import 'app_typography.dart';
 
-/// AppTheme definition for Kapada Creation Customer App.
+/// AppTheme definition for Kapada Creation Customer Workspace.
 abstract class AppTheme {
   const AppTheme._();
 
@@ -22,78 +22,126 @@ abstract class AppTheme {
         error: AppColors.error,
         onError: AppColors.surfaceWhite,
       ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.warmIvory,
-        foregroundColor: AppColors.charcoal,
+      textTheme: GoogleFonts.montserratTextTheme().copyWith(
+        displayLarge: GoogleFonts.playfairDisplay(
+          fontSize: 32,
+          fontWeight: FontWeight.w700,
+          color: AppColors.charcoal,
+          letterSpacing: -0.5,
+        ),
+        displayMedium: GoogleFonts.playfairDisplay(
+          fontSize: 26,
+          fontWeight: FontWeight.w700,
+          color: AppColors.charcoal,
+          letterSpacing: -0.3,
+        ),
+        headlineMedium: GoogleFonts.playfairDisplay(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: AppColors.charcoal,
+        ),
+        titleLarge: GoogleFonts.montserrat(
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+          color: AppColors.charcoal,
+        ),
+        titleMedium: GoogleFonts.montserrat(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: AppColors.charcoal,
+        ),
+        bodyLarge: GoogleFonts.montserrat(
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+          color: AppColors.charcoal,
+        ),
+        bodyMedium: GoogleFonts.montserrat(
+          fontSize: 13,
+          fontWeight: FontWeight.w400,
+          color: AppColors.charcoal,
+        ),
+        bodySmall: GoogleFonts.montserrat(
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+          color: AppColors.mutedText,
+        ),
+      ),
+      appBarTheme: AppBarTheme(
+        backgroundColor: AppColors.brandGreen900,
+        foregroundColor: AppColors.surfaceWhite,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        titleTextStyle: AppTypography.pageTitle,
+        titleTextStyle: GoogleFonts.playfairDisplay(
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+          color: AppColors.surfaceWhite,
+        ),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: AppColors.surfaceWhite,
+        indicatorColor: AppColors.brandGreen50,
+        elevation: 0,
+        height: 68,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return const IconThemeData(
+              color: AppColors.brandGreen900,
+              size: 22,
+            );
+          }
+          return const IconThemeData(color: AppColors.mutedText, size: 22);
+        }),
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return GoogleFonts.montserrat(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: AppColors.brandGreen900,
+              letterSpacing: 0.3,
+            );
+          }
+          return GoogleFonts.montserrat(
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+            color: AppColors.mutedText,
+          );
+        }),
       ),
       cardTheme: CardThemeData(
         color: AppColors.surfaceWhite,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           side: const BorderSide(color: AppColors.borderSoft),
         ),
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: AppColors.softCream,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.borderSoft),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.borderSoft),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.brandGreen800, width: 1.5),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.error),
-        ),
-        hintStyle: AppTypography.body.copyWith(color: AppColors.mutedText),
-        labelStyle: AppTypography.body.copyWith(color: AppColors.mutedText),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.brandGreen800,
           foregroundColor: AppColors.surfaceWhite,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          textStyle: GoogleFonts.montserrat(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.2,
           ),
-          textStyle: AppTypography.button,
+          elevation: 0,
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.brandGreen800,
-          side: const BorderSide(color: AppColors.brandGreen800),
+          side: const BorderSide(color: AppColors.brandGreen800, width: 1.5),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          textStyle: GoogleFonts.montserrat(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
           ),
-          textStyle: AppTypography.button.copyWith(color: AppColors.brandGreen800),
         ),
-      ),
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: AppColors.surfaceWhite,
-        selectedItemColor: AppColors.brandGreen800,
-        unselectedItemColor: AppColors.mutedText,
-        elevation: 8,
-        type: BottomNavigationBarType.fixed,
-      ),
-      dividerTheme: const DividerThemeData(
-        color: AppColors.borderSoft,
-        thickness: 1,
-        space: 1,
       ),
     );
   }

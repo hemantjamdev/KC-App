@@ -3,7 +3,10 @@ import '../models/customer_model.dart';
 /// Abstract repository defining customer data operations.
 abstract class CustomerRepository {
   Future<CustomerModel?> getCustomerById(String id);
+  Future<CustomerModel?> getCustomer(String id);
+  Stream<CustomerModel?> watchCustomer(String id);
   Future<CustomerModel?> getCustomerByFirebaseUid(String firebaseUid);
+  Future<CustomerModel?> getCustomerByEmail(String email);
   Future<List<CustomerModel>> getCustomersForAdmin({
     String? boutiqueId,
     bool? isActive,

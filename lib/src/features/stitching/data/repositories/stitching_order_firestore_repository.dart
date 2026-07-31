@@ -13,11 +13,11 @@ class StitchingOrderFirestoreRepository {
     String boutiqueId,
     String? branchId,
   ) {
-    Query<Map<String, dynamic>> query = _firestore
-        .collection(FirestorePaths.stitchingOrders)
-        .where('boutiqueId', isEqualTo: boutiqueId);
+    Query<Map<String, dynamic>> query = _firestore.collection(
+      FirestorePaths.stitchingOrders,
+    );
 
-    if (branchId != null) {
+    if (branchId != null && branchId.isNotEmpty) {
       query = query.where('branchId', isEqualTo: branchId);
     }
 
@@ -37,7 +37,6 @@ class StitchingOrderFirestoreRepository {
   ) {
     return _firestore
         .collection(FirestorePaths.stitchingOrders)
-        .where('boutiqueId', isEqualTo: boutiqueId)
         .where('customerId', isEqualTo: customerId)
         .snapshots()
         .map((snapshot) {
@@ -126,11 +125,8 @@ class StitchingOrderFirestoreRepository {
     DocumentSnapshot<Map<String, dynamic>> doc,
   ) {
     final data = doc.data() ?? {};
-    final statusStr = data['status'] as String? ?? 'received';
-    final status = StitchingOrderStatus.values.firstWhere(
-      (s) => s.name == statusStr,
-      orElse: () => StitchingOrderStatus.received,
-    );
+    final statusStr = data['status'] as String?;
+    final status = StitchingOrderStatus.parse(statusStr);
 
     final createdAtRaw = data['createdAt'];
     final createdAt = createdAtRaw is Timestamp

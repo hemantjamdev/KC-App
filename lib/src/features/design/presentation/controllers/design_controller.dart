@@ -11,9 +11,9 @@ class DesignController extends ChangeNotifier {
     required this.branchId,
     required List<String> activeCategoryIds,
     DesignFirestoreRepository? repository,
-  })  : _boutiqueId = boutiqueId,
-        _activeCategoryIds = activeCategoryIds,
-        _repository = repository ?? DesignFirestoreRepository();
+  }) : _boutiqueId = boutiqueId,
+       _activeCategoryIds = activeCategoryIds,
+       _repository = repository ?? DesignFirestoreRepository();
 
   final String _boutiqueId;
   final String branchId;
@@ -76,7 +76,6 @@ class DesignController extends ChangeNotifier {
     try {
       final allDesigns = await _repository.watchDesigns(_boutiqueId).first;
       _eligibleDesigns = allDesigns.where((d) {
-        if (!d.isActive) return false;
         if (_activeCategoryIds.isNotEmpty &&
             !_activeCategoryIds.contains(d.categoryId)) {
           return false;

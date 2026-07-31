@@ -15,8 +15,23 @@ class CustomerRepositoryImpl implements CustomerRepository {
   }
 
   @override
+  Future<CustomerModel?> getCustomer(String id) {
+    return _dataSource.fetchById(id);
+  }
+
+  @override
+  Stream<CustomerModel?> watchCustomer(String id) {
+    return _dataSource.watchById(id);
+  }
+
+  @override
   Future<CustomerModel?> getCustomerByFirebaseUid(String firebaseUid) {
     return _dataSource.fetchByFirebaseUid(firebaseUid);
+  }
+
+  @override
+  Future<CustomerModel?> getCustomerByEmail(String email) {
+    return _dataSource.fetchByEmail(email);
   }
 
   @override
