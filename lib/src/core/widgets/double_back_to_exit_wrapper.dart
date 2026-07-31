@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'app_toast.dart';
 
 /// Wraps root/shell screens to prevent immediate exit on back press.
-/// First back press shows a 3-second toast: "Press back again to exit".
-/// Second back press within 3 seconds exits the application.
+/// - Debounces rapid OS back gesture callbacks (< 350ms).
+/// - Shows warning toast on 1st back press on root/shell tabs.
+/// - Exits app on 2nd intentional back tap within 2.0s window.
 class DoubleBackToExitWrapper extends StatefulWidget {
   const DoubleBackToExitWrapper({super.key, required this.child});
 
@@ -33,45 +34,31 @@ class _DoubleBackToExitWrapperState extends State<DoubleBackToExitWrapper> {
 
         // On Root / Shell page: handle double back to exit
         final now = DateTime.now();
-        if (_lastBackPressTime == null ||
-            now.difference(_lastBackPressTime!) > const Duration(seconds: 3)) {
-          _lastBackPressTime = now;
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              behavior: SnackBarBehavior.floating,
-              margin: const EdgeInsets.all(16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-              backgroundColor: const Color(0xFF1F2937),
-              duration: const Duration(seconds: 3),
-              content: Row(
-                children: [
-                  const Icon(
-                    Icons.exit_to_app_rounded,
-                    color: Color(0xFFD4AF37),
-                    size: 20,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Press back again to exit',
-                      style: GoogleFonts.montserrat(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        } else {
-          await SystemNavigator.pop();
+
+        if (_lastBackPressTime != null) {
+          final timeDiff = now.difference(_lastBackPressTime!).inMilliseconds;
+
+          // Ignore rapid duplicate OS gesture callbacks (< 350ms)
+          if (timeDiff < 350) {
+            return;
+          }
+
+          // Real 2nd tap within 2000ms (2 seconds): exit the app!
+          if (timeDiff <= 2000) {
+            await SystemNavigator.pop();
+            return;
+          }
         }
+
+        // 1st tap (or > 2000ms delay since previous tap): record timestamp & show warning toast
+        _lastBackPressTime = now;
+
+        if (!mounted) return;
+        AppToast.show(
+          context,
+          'Press again to exit the app',
+          type: ToastType.warning,
+        );
       },
       child: widget.child,
     );
