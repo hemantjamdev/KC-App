@@ -1,71 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/app_routes.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
-import '../../../../core/widgets/app_loading_indicator.dart';
 import '../../../../core/widgets/kc_app_bar.dart';
 import '../../../design/domain/models/design_model.dart';
-import '../../../design/presentation/controllers/design_controller.dart';
+import '../../application/providers/section_providers.dart';
 import '../../domain/models/section_model.dart';
-import '../controllers/section_controller.dart';
 
 /// Customer Section Details Page — displays all resolved designs for a specific section in a responsive grid with search.
-class CustomerSectionDetailsPage extends StatefulWidget {
+class CustomerSectionDetailsPage extends ConsumerStatefulWidget {
   const CustomerSectionDetailsPage({super.key, required this.section});
   final SectionModel section;
 
   @override
-  State<CustomerSectionDetailsPage> createState() =>
+  ConsumerState<CustomerSectionDetailsPage> createState() =>
       _CustomerSectionDetailsPageState();
 }
 
 class _CustomerSectionDetailsPageState
-    extends State<CustomerSectionDetailsPage> {
-  late SectionController _sectionController;
-  late DesignController _designController;
+    extends ConsumerState<CustomerSectionDetailsPage> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
   @override
-  void initState() {
-    super.initState();
-    _designController = DesignController(
-      boutiqueId: 'boutique_01',
-      branchId: '',
-      activeCategoryIds: [],
-    );
-
-    _sectionController = SectionController(
-      boutiqueId: 'boutique_01',
-      branchId: '',
-      designController: _designController,
-    );
-
-    _designController.loadDesigns().then((_) {
-      _sectionController.loadSections();
-    });
-
-    _sectionController.addListener(_onUpdate);
-  }
-
-  void _onUpdate() {
-    if (mounted) setState(() {});
-  }
-
-  @override
   void dispose() {
-    _sectionController.removeListener(_onUpdate);
-    _sectionController.dispose();
-    _designController.dispose();
     _searchController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final allResolved = _sectionController.getDesignsForSection(widget.section);
+    final allResolved = ref.watch(
+      sectionResolvedDesignsProvider(widget.section),
+    );
     final visible = allResolved.where((d) {
       if (_searchQuery.isEmpty) return true;
       final q = _searchQuery.toLowerCase();
@@ -78,28 +48,9 @@ class _CustomerSectionDetailsPageState
       canPop: context.canPop(),
       child: Scaffold(
         backgroundColor: AppColors.background,
-        appBar: KCAppBar(
-          title: widget.section.title,
-        ),
+        appBar: KCAppBar(title: widget.section.title),
         body: SafeArea(
-        child: _sectionController.isLoading
-            ? const Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    AppLoadingIndicator(size: 32),
-                    SizedBox(height: AppSpacing.md),
-                    Text(
-                      'Loading collection...',
-                      style: TextStyle(
-                        color: AppColors.textMuted,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-              )
-            : Column(
+          child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Padding(

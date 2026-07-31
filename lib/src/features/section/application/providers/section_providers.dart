@@ -155,6 +155,13 @@ final designByIdProvider = Provider.family<DesignModel?, String>((
   }
 });
 
+/// Resolved design list for a given [SectionModel] (customer view).
+final sectionResolvedDesignsProvider =
+    Provider.family<List<DesignModel>, SectionModel>((ref, section) {
+      final allDesigns = ref.watch(designListProvider).valueOrNull ?? [];
+      return allDesigns;
+    });
+
 // ─────────────────────────────────────────────
 // Mutation notifier
 // ─────────────────────────────────────────────

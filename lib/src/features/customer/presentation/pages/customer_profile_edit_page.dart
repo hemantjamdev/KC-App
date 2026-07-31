@@ -26,7 +26,6 @@ class _CustomerProfileEditPageState
   final _nameFocusNode = FocusNode();
   final _phoneFocusNode = FocusNode();
 
-  bool _isSaving = false;
   bool _hasChanges = false;
 
   @override
@@ -57,7 +56,6 @@ class _CustomerProfileEditPageState
   }
 
   Future<void> _save() async {
-    if (_isSaving) return;
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final customer = ref.read(customerProfileProvider).valueOrNull;
@@ -65,10 +63,7 @@ class _CustomerProfileEditPageState
 
     if (user == null) return;
 
-    setState(() => _isSaving = true);
-    final repo = ref.read(customerRepositoryProvider);
     final now = DateTime.now();
-
     final updated =
         (customer ??
                 CustomerModel(
@@ -89,10 +84,9 @@ class _CustomerProfileEditPageState
               updatedAt: now,
             );
 
-    await repo.updateCustomer(updated);
+    await ref.read(customerMutationProvider.notifier).update(updated);
 
     if (!mounted) return;
-    setState(() => _isSaving = false);
     AppToast.show(
       context,
       'Profile updated successfully.',
@@ -199,7 +193,7 @@ class _CustomerProfileEditPageState
                     SizedBox(
                       width: double.infinity,
                       height: 50,
-                      child: _isSaving
+                      child: ref.watch(customerMutationProvider).isLoading
                           ? const Center(
                               child: CircularProgressIndicator(
                                 color: AppColors.brandGreen800,
