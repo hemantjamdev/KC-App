@@ -441,16 +441,4 @@ class NotificationController extends ChangeNotifier {
     _isLoading = false;
     notifyListeners();
   }
-
-  Future<void> deleteMockDraft(String notificationId) async {
-    _isLoading = true;
-    notifyListeners();
-
-    await Future.delayed(const Duration(milliseconds: 200));
-    _sessionNotifications.removeWhere((n) => n.id == notificationId);
-    _sessionReadRecords.removeWhere((r) => r.notificationId == notificationId);
-
-    _isLoading = false;
-    notifyListeners();
-  }
 }

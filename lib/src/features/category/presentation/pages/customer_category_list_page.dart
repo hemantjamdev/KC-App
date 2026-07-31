@@ -251,7 +251,8 @@ class _CategoryListCard extends StatelessWidget {
                   ? Image.network(
                       category.imageUrl!,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => _buildFallback(),
+                      errorBuilder: (context, error, stackTrace) =>
+                          _buildFallback(),
                     )
                   : _buildFallback(),
             ),

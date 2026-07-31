@@ -289,7 +289,8 @@ class _AllDesignsCard extends StatelessWidget {
                   ? Image.network(
                       imgUrl,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => _fallbackImage(),
+                      errorBuilder: (context, error, stackTrace) =>
+                          _fallbackImage(),
                     )
                   : _fallbackImage(),
             ),
