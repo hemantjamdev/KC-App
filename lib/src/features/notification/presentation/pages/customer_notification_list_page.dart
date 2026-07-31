@@ -7,7 +7,6 @@ import '../../../../app/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import 'package:kc_app/src/core/widgets/kc_app_bar.dart';
-import '../../../auth/application/providers/auth_providers.dart';
 import '../../application/providers/notification_providers.dart';
 import '../../domain/models/notification_model.dart';
 
@@ -20,16 +19,7 @@ class CustomerNotificationListPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final notificationsAsync = ref.watch(notificationListProvider);
     final notifications = notificationsAsync.valueOrNull ?? [];
-    final user = ref.watch(currentCustomerUserProvider);
-
-    // Filter notifications: general announcements or targeted to current user
-    final visible = notifications.where((n) {
-      if (n.audienceType == NotificationAudienceType.allBoutiqueCustomers) {
-        return true;
-      }
-      if (user != null && n.targetUserIds.contains(user.uid)) return true;
-      return false;
-    }).toList();
+    final visible = notifications;
 
     return Scaffold(
       backgroundColor: AppColors.warmIvory,
