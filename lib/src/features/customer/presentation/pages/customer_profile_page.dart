@@ -15,7 +15,7 @@ import '../../../design/application/providers/favorite_providers.dart';
 import '../../../stitching/application/providers/stitching_providers.dart';
 import '../../../stitching/domain/models/stitching_order_model.dart';
 
-/// Kapada Creation Customer App — Redesigned Luxury Customer Profile Page.
+/// Kapada Creation Customer App — Green Leather & Gold Luxury Customer Profile Page.
 class CustomerProfilePage extends ConsumerWidget {
   const CustomerProfilePage({super.key});
 
@@ -76,13 +76,13 @@ class CustomerProfilePage extends ConsumerWidget {
               ),
             ),
 
-            // ── 2. User Profile Card ──────────────────────────────
+            // ── 2. Green Luxury Profile Card ──────────────────────
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: !isAuthenticated
                     ? _GuestProfileCard()
-                    : _LoggedInProfileCard(
+                    : _GreenProfileCard(
                         displayName: displayName,
                         email: email,
                         phone: phone,
@@ -92,9 +92,9 @@ class CustomerProfilePage extends ConsumerWidget {
               ),
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            const SliverToBoxAdapter(child: SizedBox(height: 20)),
 
-            // ── 3. Quick Action Hub (Orders, Favorites, Notifications) ──
+            // ── 3. Quick Action Hub (Orders & Favorites) ──────────
             if (isAuthenticated)
               SliverToBoxAdapter(
                 child: Padding(
@@ -142,7 +142,7 @@ class CustomerProfilePage extends ConsumerWidget {
 
             const SliverToBoxAdapter(child: SizedBox(height: 20)),
 
-            // ── 4. Studio Information Card ────────────────────────
+            // ── 4. Green Leather Shop Info Card ───────────────────
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -236,7 +236,7 @@ class CustomerProfilePage extends ConsumerWidget {
                             side: const BorderSide(color: Color(0xFFDC2626)),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                         ),
@@ -244,7 +244,6 @@ class CustomerProfilePage extends ConsumerWidget {
                       const SizedBox(height: 16),
                     ],
 
-                    // Clean App Version Footer text
                     FutureBuilder<PackageInfo>(
                       future: PackageInfo.fromPlatform(),
                       builder: (context, snapshot) {
@@ -286,20 +285,213 @@ class CustomerProfilePage extends ConsumerWidget {
   }
 }
 
+class _GreenProfileCard extends StatelessWidget {
+  const _GreenProfileCard({
+    required this.displayName,
+    required this.email,
+    required this.phone,
+    required this.photoUrl,
+    required this.onEdit,
+  });
+
+  final String displayName;
+  final String email;
+  final String phone;
+  final String? photoUrl;
+  final VoidCallback onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1B5E20), Color(0xFF144717)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: const Color(0xFFC5A880).withValues(alpha: 0.6),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Stack(
+                children: [
+                  Container(
+                    width: 62,
+                    height: 62,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: const Color(0xFFC5A880),
+                        width: 1.8,
+                      ),
+                      image: photoUrl != null && photoUrl!.isNotEmpty
+                          ? DecorationImage(
+                              image: NetworkImage(photoUrl!),
+                              fit: BoxFit.cover,
+                            )
+                          : null,
+                    ),
+                    child: photoUrl == null || photoUrl!.isEmpty
+                        ? Center(
+                            child: Text(
+                              displayName.isNotEmpty
+                                  ? displayName[0].toUpperCase()
+                                  : 'C',
+                              style: GoogleFonts.playfairDisplay(
+                                fontSize: 26,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          )
+                        : null,
+                  ),
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: GestureDetector(
+                      onTap: onEdit,
+                      child: Container(
+                        padding: const EdgeInsets.all(5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFC5A880),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 1.5),
+                        ),
+                        child: PhosphorIcon(
+                          PhosphorIcons.pencilSimple(PhosphorIconsStyle.bold),
+                          color: Colors.white,
+                          size: 11,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      displayName,
+                      style: GoogleFonts.playfairDisplay(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      email,
+                      style: GoogleFonts.montserrat(
+                        fontSize: 12.5,
+                        color: Colors.white.withValues(alpha: 0.85),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (phone != 'No phone number') ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        phone,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 12,
+                          color: const Color(0xFFC5A880),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Divider(
+            height: 1,
+            color: const Color(0xFFC5A880).withValues(alpha: 0.3),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(
+                    Icons.verified_rounded,
+                    size: 15,
+                    color: Color(0xFFC5A880),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'GOOGLE VERIFIED VIP MEMBER',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFFC5A880),
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                ],
+              ),
+              GestureDetector(
+                onTap: onEdit,
+                child: Text(
+                  'Edit Profile →',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _GuestProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.surfaceWhite,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.borderSoft),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1B5E20), Color(0xFF144717)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: const Color(0xFFC5A880).withValues(alpha: 0.6),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -309,14 +501,15 @@ class _GuestProfileCard extends StatelessWidget {
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: AppColors.brandGreen800.withValues(alpha: 0.1),
+              color: Colors.white.withValues(alpha: 0.15),
               shape: BoxShape.circle,
+              border: Border.all(color: const Color(0xFFC5A880), width: 1.5),
             ),
             child: Center(
               child: PhosphorIcon(
                 PhosphorIcons.user(PhosphorIconsStyle.bold),
                 size: 28,
-                color: AppColors.brandGreen800,
+                color: const Color(0xFFC5A880),
               ),
             ),
           ),
@@ -326,7 +519,7 @@ class _GuestProfileCard extends StatelessWidget {
             style: GoogleFonts.playfairDisplay(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: AppColors.charcoal,
+              color: Colors.white,
             ),
           ),
           const SizedBox(height: 4),
@@ -334,7 +527,7 @@ class _GuestProfileCard extends StatelessWidget {
             'Sign in to save favorite designs and request custom boutique stitching.',
             style: GoogleFonts.montserrat(
               fontSize: 12,
-              color: AppColors.mutedText,
+              color: Colors.white.withValues(alpha: 0.85),
               height: 1.4,
             ),
             textAlign: TextAlign.center,
@@ -358,145 +551,12 @@ class _GuestProfileCard extends StatelessWidget {
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.brandGreen800,
+                backgroundColor: const Color(0xFFC5A880),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LoggedInProfileCard extends StatelessWidget {
-  const _LoggedInProfileCard({
-    required this.displayName,
-    required this.email,
-    required this.phone,
-    required this.photoUrl,
-    required this.onEdit,
-  });
-
-  final String displayName;
-  final String email;
-  final String phone;
-  final String? photoUrl;
-  final VoidCallback onEdit;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceWhite,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.borderSoft),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Stack(
-            children: [
-              Container(
-                width: 58,
-                height: 58,
-                decoration: BoxDecoration(
-                  color: AppColors.brandGreen800.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: AppColors.brandGreen800.withValues(alpha: 0.2),
-                  ),
-                  image: photoUrl != null && photoUrl!.isNotEmpty
-                      ? DecorationImage(
-                          image: NetworkImage(photoUrl!),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
-                ),
-                child: photoUrl == null || photoUrl!.isEmpty
-                    ? Center(
-                        child: Text(
-                          displayName.isNotEmpty
-                              ? displayName[0].toUpperCase()
-                              : 'C',
-                          style: GoogleFonts.playfairDisplay(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.brandGreen800,
-                          ),
-                        ),
-                      )
-                    : null,
-              ),
-              Positioned(
-                right: 0,
-                bottom: 0,
-                child: GestureDetector(
-                  onTap: onEdit,
-                  child: Container(
-                    padding: const EdgeInsets.all(5),
-                    decoration: BoxDecoration(
-                      color: AppColors.brandGreen800,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 1.5),
-                    ),
-                    child: PhosphorIcon(
-                      PhosphorIcons.pencilSimple(PhosphorIconsStyle.bold),
-                      color: Colors.white,
-                      size: 11,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  displayName,
-                  style: GoogleFonts.playfairDisplay(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.charcoal,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  email,
-                  style: GoogleFonts.montserrat(
-                    fontSize: 12.5,
-                    color: AppColors.mutedText,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (phone != 'No phone number') ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    phone,
-                    style: GoogleFonts.montserrat(
-                      fontSize: 12,
-                      color: AppColors.mutedText,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ],
             ),
           ),
         ],

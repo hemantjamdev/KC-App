@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/models/boutique_model.dart';
 
-/// Clean, modern, and appealing Kapada Creation Store Info Card.
+/// Luxury Deep Green Leather-Finished Kapada Creation Store Info Card.
 class StoreInfoCard extends StatelessWidget {
   const StoreInfoCard({super.key, this.boutique});
 
@@ -11,7 +12,7 @@ class StoreInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final name = boutique?.name ?? 'Kapada Creation';
+    final name = boutique?.name ?? 'Kapada Creation Studio';
     final subtitle = (boutique?.subtitle != null && boutique!.subtitle.isNotEmpty)
         ? boutique!.subtitle
         : 'Timeless elegance, stitched with love.';
@@ -29,23 +30,30 @@ class StoreInfoCard extends StatelessWidget {
         : 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?q=80&w=600&auto=format&fit=crop';
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.surfaceWhite,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.borderSoft),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1B5E20), Color(0xFF144717)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: const Color(0xFFC5A880).withValues(alpha: 0.6),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Header: Title & Studio Badge ─────────────────────
+          // ── Leather Badge Header ────────────────────────────────
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -53,20 +61,40 @@ class StoreInfoCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.workspace_premium_rounded,
+                          size: 16,
+                          color: Color(0xFFC5A880),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'KAPADA BOUTIQUE STUDIO',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFFC5A880),
+                            letterSpacing: 1.1,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
                     Text(
                       name,
                       style: GoogleFonts.playfairDisplay(
-                        fontSize: 16,
+                        fontSize: 18,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.charcoal,
+                        color: Colors.white,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
                       style: GoogleFonts.montserrat(
-                        fontSize: 11,
-                        color: AppColors.mutedText,
+                        fontSize: 11.5,
+                        color: Colors.white.withValues(alpha: 0.8),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -75,33 +103,42 @@ class StoreInfoCard extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: AppColors.warmIvory,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.borderSoft),
+                  color: const Color(0xFFC5A880),
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: Text(
-                  'Bespoke Studio',
+                  'FLAGSHIP',
                   style: GoogleFonts.montserrat(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.charcoal,
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: 0.8,
                   ),
                 ),
               ),
             ],
           ),
 
-          const SizedBox(height: 12),
-          const Divider(height: 1, color: AppColors.borderSoft),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
+          Divider(
+            height: 1,
+            color: const Color(0xFFC5A880).withValues(alpha: 0.3),
+          ),
+          const SizedBox(height: 14),
 
-          // ── Info Details & Compact Studio Photo ────────────────
+          // ── Studio Address & Phone Info ──────────────────────────
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Left Column: Details
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -110,17 +147,18 @@ class StoreInfoCard extends StatelessWidget {
                     Row(
                       children: [
                         const Icon(
-                          Icons.location_on_outlined,
-                          size: 14,
-                          color: AppColors.charcoal,
+                          Icons.location_on_rounded,
+                          size: 15,
+                          color: Color(0xFFC5A880),
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             address,
                             style: GoogleFonts.montserrat(
-                              fontSize: 11,
-                              color: AppColors.charcoal,
+                              fontSize: 12,
+                              color: Colors.white.withValues(alpha: 0.95),
+                              height: 1.3,
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -128,43 +166,43 @@ class StoreInfoCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
 
                     // Phone
                     Row(
                       children: [
                         const Icon(
-                          Icons.phone_outlined,
-                          size: 14,
-                          color: AppColors.charcoal,
+                          Icons.phone_in_talk_rounded,
+                          size: 15,
+                          color: Color(0xFFC5A880),
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 8),
                         Text(
                           phone,
                           style: GoogleFonts.montserrat(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.charcoal,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
 
                     // Hours
                     Row(
                       children: [
                         const Icon(
-                          Icons.access_time_rounded,
-                          size: 14,
-                          color: AppColors.mutedText,
+                          Icons.access_time_filled_rounded,
+                          size: 15,
+                          color: Color(0xFFC5A880),
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 8),
                         Text(
                           hours,
                           style: GoogleFonts.montserrat(
-                            fontSize: 10,
-                            color: AppColors.mutedText,
+                            fontSize: 11,
+                            color: Colors.white.withValues(alpha: 0.8),
                           ),
                         ),
                       ],
@@ -175,22 +213,31 @@ class StoreInfoCard extends StatelessWidget {
 
               const SizedBox(width: 12),
 
-              // Right Photo: Compact & Clean
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  photoUrl,
-                  width: 72,
-                  height: 84,
-                  fit: BoxFit.cover,
-                  errorBuilder: (ctx, err, stack) => Container(
-                    width: 72,
-                    height: 84,
-                    color: AppColors.warmIvory,
-                    child: const Icon(
-                      Icons.storefront_rounded,
-                      color: AppColors.charcoal,
-                      size: 24,
+              // Studio Photo Container with Gold Border
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: const Color(0xFFC5A880).withValues(alpha: 0.6),
+                    width: 1.2,
+                  ),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(13),
+                  child: Image.network(
+                    photoUrl,
+                    width: 76,
+                    height: 90,
+                    fit: BoxFit.cover,
+                    errorBuilder: (ctx, err, stack) => Container(
+                      width: 76,
+                      height: 90,
+                      color: AppColors.brandGreen800,
+                      child: const Icon(
+                        Icons.storefront_rounded,
+                        color: Color(0xFFC5A880),
+                        size: 28,
+                      ),
                     ),
                   ),
                 ),
