@@ -318,6 +318,8 @@ class StitchingOrderModel {
   final String? createdBy;
   final String? updatedBy;
 
+  String get displayRequestName => designReferences.isNotEmpty ? designReferences.first.designName : 'Custom Stitching Request';
+
   StitchingOrderModel copyWith({
     String? id,
     String? boutiqueId,

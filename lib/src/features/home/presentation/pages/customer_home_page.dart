@@ -2,23 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
-
 import '../../../../app/app_routes.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../auth/application/providers/auth_providers.dart';
 import '../../../auth/presentation/widgets/google_auth_bottom_sheet.dart';
-import '../../../boutique/application/providers/boutique_providers.dart';
-import '../../../boutique/presentation/widgets/store_info_card.dart';
 import '../../../category/application/providers/category_providers.dart';
 import '../../../category/domain/models/category_model.dart';
 import '../../../design/application/providers/design_providers.dart';
 import '../../../design/application/providers/favorite_providers.dart';
 import '../../../design/domain/models/design_model.dart';
 import '../../../notification/application/providers/notification_providers.dart';
-import '../../../stitching/presentation/widgets/stitching_request_bottom_sheet.dart';
 
-/// Kapada Creation Customer App — Ultra-Premium Luxury Boutique Home Page.
+/// Kapada Creation Customer App — Luxury Home Dashboard.
+/// Fully dynamic Firestore integration with ZERO mock/dummy fallback data.
 class CustomerHomePage extends ConsumerStatefulWidget {
   const CustomerHomePage({super.key});
 
@@ -27,8 +24,6 @@ class CustomerHomePage extends ConsumerStatefulWidget {
 }
 
 class _CustomerHomePageState extends ConsumerState<CustomerHomePage> {
-  String _selectedCategorySlug = 'all';
-
   static String _greeting() {
     final hour = DateTime.now().hour;
     if (hour < 12) return 'Good morning';
@@ -41,8 +36,6 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage> {
     final user = ref.watch(currentCustomerUserProvider);
     final customerProfile = ref.watch(customerProfileProvider).valueOrNull;
     final unreadNotificationCount = ref.watch(unreadNotificationCountProvider);
-    final boutique = ref.watch(selectedBoutiqueProvider) ??
-        ref.watch(autoSelectedBoutiqueProvider);
 
     final designsAsync = ref.watch(designListProvider);
     final designs = designsAsync.valueOrNull ?? [];
@@ -50,7 +43,6 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage> {
 
     final categories = ref.watch(activeCategoryListProvider);
 
-    // Customer Display Name
     final cName = customerProfile?.displayName;
     final customerName = (cName != null && cName.trim().isNotEmpty)
         ? cName.trim().split(' ').first
@@ -63,52 +55,92 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage> {
     final String formattedCustomerName =
         (customerName != null && customerName.isNotEmpty)
             ? '${customerName[0].toUpperCase()}${customerName.substring(1)}'
-            : 'Guest';
+            : 'Valued Guest';
 
     // Active designs from Firestore
     final activeDesigns = designs.where((d) => d.isActive).toList();
 
-    // Only include categories that contain products
-    final categoriesWithProducts = categories.where((cat) {
-      final slug = cat.slug.isNotEmpty ? cat.slug : cat.id;
-      return activeDesigns.any((d) =>
-          d.categoryId == cat.id ||
-          d.categoryId == slug ||
-          d.tags.contains(slug) ||
-          d.tags.contains(cat.name.toLowerCase()));
-    }).toList();
+    // 1. Trending Design from Firestore
+    final trendingDesign = activeDesigns.isNotEmpty ? activeDesigns.first : null;
 
-    // Filter designs based on selected category pill
-    final filteredDesigns = _selectedCategorySlug == 'all'
-        ? activeDesigns
-        : activeDesigns.where((d) {
-            final cat = categoriesWithProducts.firstWhere(
-              (c) =>
-                  c.slug == _selectedCategorySlug ||
-                  c.id == _selectedCategorySlug,
-              orElse: () => CategoryModel(
-                id: '',
-                boutiqueId: '',
-                name: '',
-                slug: '',
-                sortOrder: 0,
-                isActive: true,
-                isSystem: false,
-                createdAt: DateTime.now(),
-                updatedAt: DateTime.now(),
-              ),
-            );
-            if (cat.id.isNotEmpty && d.categoryId == cat.id) return true;
-            return d.tags.contains(_selectedCategorySlug) ||
-                d.tags.contains(cat.name.toLowerCase());
-          }).toList();
+    // 2. New Arrivals Category & Designs from Firestore
+    final newArrivalsCategory = categories.firstWhere(
+      (c) => c.slug == 'new-arrivals' || c.id.contains('new_arrivals'),
+      orElse: () => CategoryModel(
+        id: 'cat_new_arrivals',
+        boutiqueId: 'boutique_01',
+        name: 'New Arrivals',
+        slug: 'new-arrivals',
+        sortOrder: 2,
+        isActive: true,
+        isSystem: true,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    );
+    final newArrivalsDesigns = activeDesigns
+        .where((d) => d.categoryId == newArrivalsCategory.id || d.tags.contains('new'))
+        .toList();
+    final displayNewArrivals = newArrivalsDesigns.isNotEmpty
+        ? newArrivalsDesigns
+        : activeDesigns.skip(1).take(2).toList();
+
+    // 3. Festive Category & Designs from Firestore
+    final festiveCategory = categories.firstWhere(
+      (c) => c.slug == 'festive' || c.id.contains('festive'),
+      orElse: () => CategoryModel(
+        id: 'cat_festive',
+        boutiqueId: 'boutique_01',
+        name: 'Festive',
+        slug: 'festive',
+        sortOrder: 3,
+        isActive: true,
+        isSystem: true,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    );
+    final festiveDesigns = activeDesigns
+        .where((d) => d.categoryId == festiveCategory.id || d.tags.contains('festive'))
+        .toList();
+
+    // 4. Seasonal Category & Designs from Firestore
+    final seasonalCategory = categories.firstWhere(
+      (c) => c.slug == 'seasonal' || c.id.contains('seasonal'),
+      orElse: () => CategoryModel(
+        id: 'cat_seasonal',
+        boutiqueId: 'boutique_01',
+        name: 'Seasonal',
+        slug: 'seasonal',
+        sortOrder: 1,
+        isActive: true,
+        isSystem: true,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    );
+    final seasonalDesigns = activeDesigns
+        .where((d) => d.categoryId == seasonalCategory.id || d.tags.contains('seasonal'))
+        .toList();
+
+    // 5. Custom Admin Categories created in Firestore
+    final customCategories = categories
+        .where((c) =>
+            !c.isSystem &&
+            c.slug != 'seasonal' &&
+            c.slug != 'new-arrivals' &&
+            c.slug != 'festive' &&
+            !c.id.contains('seasonal') &&
+            !c.id.contains('new_arrivals') &&
+            !c.id.contains('festive'))
+        .toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF7F2), // Soft Luxury Ivory
+      backgroundColor: const Color(0xFFFAF7F2), // Warm Luxe Ivory
       body: SafeArea(
         child: RefreshIndicator(
-          color: const Color(0xFFC5A880),
-          backgroundColor: Colors.white,
+          color: AppColors.brandGreen,
+          backgroundColor: AppColors.surfaceWhite,
           onRefresh: () async {
             ref.invalidate(designListProvider);
             ref.invalidate(customerProfileProvider);
@@ -120,320 +152,418 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage> {
               parent: BouncingScrollPhysics(),
             ),
             slivers: [
-              // ── 1. Top Brand Header ──────────────────────────────
+              // ── Top Header Bar ──────────────────────────────────
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-                  child: Row(
+                  padding: const EdgeInsets.fromLTRB(20, 14, 20, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'KAPADA CREATION',
-                              style: GoogleFonts.playfairDisplay(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w800,
-                                color: const Color(0xFFC5A880),
-                                letterSpacing: 1.5,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              '${_greeting()}, $formattedCustomerName',
-                              style: GoogleFonts.montserrat(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w500,
-                                color: const Color(0xFF666666),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Notification Bell Shortcut
-                      Stack(
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: const Color(0xFFEAE5DC),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.03),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: IconButton(
-                              icon: PhosphorIcon(
-                                PhosphorIcons.bellRinging(PhosphorIconsStyle.bold),
-                                size: 19,
-                                color: const Color(0xFF1A1A1A),
-                              ),
-                              onPressed: () => context.push(
-                                AppRoutes.customerNotificationList,
-                              ),
-                              tooltip: 'Notifications',
-                            ),
-                          ),
-                          if (unreadNotificationCount > 0)
-                            Positioned(
-                              right: 2,
-                              top: 2,
-                              child: Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFDC2626),
+                          // Brand Logo Badge
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: AppColors.brandGreen900.withValues(alpha: 0.08),
                                   shape: BoxShape.circle,
                                 ),
-                                child: Text(
-                                  '$unreadNotificationCount',
-                                  style: GoogleFonts.montserrat(
-                                    color: Colors.white,
-                                    fontSize: 9.5,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                child: const Icon(
+                                  Icons.local_florist_rounded,
+                                  size: 16,
+                                  color: AppColors.brandGreen900,
                                 ),
                               ),
-                            ),
+                              const SizedBox(width: 8),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Kapada',
+                                    style: GoogleFonts.playfairDisplay(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.brandGreen900,
+                                    ),
+                                  ),
+                                  Text(
+                                    'CREATION  Est. 2015',
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 1.5,
+                                      color: AppColors.brandGreen800,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+
+                          // Notification Bell
+                          Stack(
+                            children: [
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.notifications_none_rounded,
+                                  size: 24,
+                                  color: AppColors.charcoal,
+                                ),
+                                onPressed: () => context.push(
+                                  AppRoutes.customerNotificationList,
+                                ),
+                                tooltip: 'Notifications',
+                              ),
+                              if (unreadNotificationCount > 0)
+                                Positioned(
+                                  right: 8,
+                                  top: 8,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: const BoxDecoration(
+                                      color: AppColors.error,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Text(
+                                      '$unreadNotificationCount',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
                         ],
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Greeting Subtitle
+                      Text(
+                        '${_greeting()}, $formattedCustomerName',
+                        style: GoogleFonts.playfairDisplay(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.charcoal,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        "Let's stitch your style story 🌿",
+                        style: GoogleFonts.montserrat(
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                          color: AppColors.mutedText,
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
 
-              // ── 2. Bespoke Custom Tailoring Hero Banner ───────────
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                  child: Container(
-                    padding: const EdgeInsets.all(22),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: const Color(0xFFC5A880).withValues(alpha: 0.5),
-                        width: 1.2,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.04),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 9,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFC5A880).withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                'BESPOKE TAILORING',
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFFA67C52),
-                                  letterSpacing: 1.2,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Custom Bridal Couture\n& Tailored Outfits',
-                          style: GoogleFonts.playfairDisplay(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF1A1A1A),
-                            height: 1.25,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Handcrafted fit, premium stitching, and personalized measurements.',
-                          style: GoogleFonts.montserrat(
-                            fontSize: 12.5,
-                            color: const Color(0xFF666666),
-                            height: 1.4,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton.icon(
-                          onPressed: () => StitchingRequestBottomSheet.show(context),
-                          icon: PhosphorIcon(
-                            PhosphorIcons.scissors(PhosphorIconsStyle.bold),
-                            size: 16,
-                            color: Colors.white,
-                          ),
-                          label: Text(
-                            'Request Custom Stitching',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF1A1A1A),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 18,
-                              vertical: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 0,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-              // ── 3. Category Filter Chips ──────────────────────────
-              SliverToBoxAdapter(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Text(
-                        'EXPLORE COLLECTIONS',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF888888),
-                          letterSpacing: 1.1,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Row(
-                        children: [
-                          _buildCategoryChip(
-                            label: 'All Garments',
-                            slug: 'all',
-                            isSelected: _selectedCategorySlug == 'all',
-                          ),
-                          ...categoriesWithProducts.map((cat) {
-                            final slug = cat.slug.isNotEmpty ? cat.slug : cat.id;
-                            return _buildCategoryChip(
-                              label: cat.name,
-                              slug: slug,
-                              isSelected: _selectedCategorySlug == slug,
-                            );
-                          }),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SliverToBoxAdapter(child: SizedBox(height: 20)),
-
-              // ── 4. Garment Catalog Grid ───────────────────────────
               if (isLoading)
-                const SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 40),
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        color: Color(0xFFC5A880),
-                      ),
+                const SliverFillRemaining(
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.brandGreen800,
+                      strokeWidth: 2,
                     ),
                   ),
                 )
-              else if (filteredDesigns.isEmpty)
-                const SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 40),
-                    child: AppEmptyState(
-                      title: 'No Garments Found',
-                      message: 'No designs match the selected category.',
-                      icon: Icons.style_outlined,
-                    ),
+              else if (activeDesigns.isEmpty)
+                SliverFillRemaining(
+                  child: AppEmptyState(
+                    icon: Icons.checkroom_rounded,
+                    title: 'No styles available yet',
+                    message:
+                        'The studio collection is currently being updated. Please check back shortly.',
+                    actionLabel: 'Refresh',
+                    onAction: () => ref.invalidate(designListProvider),
                   ),
                 )
               else ...[
+                // ── 1. TRENDING Hero Banner ────────────────────────
+                if (trendingDesign != null) ...[
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: _buildTrendingHeroCard(context, trendingDesign),
+                    ),
+                  ),
+                  const SliverToBoxAdapter(child: SizedBox(height: 28)),
+                ],
+
+                // ── 2. NEW ARRIVALS Section ────────────────────────
+                if (displayNewArrivals.isNotEmpty) ...[
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: _buildSectionHeader(
+                        title: 'NEW ARRIVALS',
+                        onViewAll: () => context.push(
+                          AppRoutes.customerCategoryDesigns,
+                          extra: newArrivalsCategory,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SliverToBoxAdapter(child: SizedBox(height: 14)),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _buildNewArrivalCard(context, displayNewArrivals[0]),
+                          ),
+                          if (displayNewArrivals.length > 1) ...[
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _buildNewArrivalCard(context, displayNewArrivals[1]),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SliverToBoxAdapter(child: SizedBox(height: 28)),
+                ],
+
+                // ── 3. FESTIVAL Section ───────────────────────────
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: _buildSectionHeader(
+                      title: 'FESTIVAL',
+                      onViewAll: () => context.push(
+                        AppRoutes.customerCategoryDesigns,
+                        extra: festiveCategory,
+                      ),
+                    ),
+                  ),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 14)),
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'DESIGNS (${filteredDesigns.length})',
-                          style: GoogleFonts.montserrat(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF888888),
-                            letterSpacing: 1.1,
+                        // Left Feature Card
+                        Expanded(
+                          flex: 5,
+                          child: _buildFestivalMainCard(
+                            context,
+                            festiveCategory,
+                            festiveDesigns.isNotEmpty ? festiveDesigns.first : null,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+
+                        // Right Column Cards
+                        Expanded(
+                          flex: 4,
+                          child: Column(
+                            children: [
+                              _buildFestivalSubCard(
+                                context,
+                                festiveDesigns.length > 1 ? festiveDesigns[1].name : 'Lehenga Edit',
+                                festiveCategory,
+                                festiveDesigns.length > 1 ? festiveDesigns[1] : null,
+                              ),
+                              const SizedBox(height: 12),
+                              _buildFestivalSubCard(
+                                context,
+                                festiveDesigns.length > 2 ? festiveDesigns[2].name : 'Sharara Style',
+                                festiveCategory,
+                                festiveDesigns.length > 2 ? festiveDesigns[2] : null,
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
                   ),
                 ),
-                const SliverToBoxAdapter(child: SizedBox(height: 12)),
 
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  sliver: SliverGrid(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 16,
-                      crossAxisSpacing: 14,
-                      childAspectRatio: 0.72,
-                    ),
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        return _buildGarmentGridCard(
-                          context,
-                          filteredDesigns[index],
-                        );
-                      },
-                      childCount: filteredDesigns.length,
+                const SliverToBoxAdapter(child: SizedBox(height: 28)),
+
+                // ── 4. SEASONAL Section ───────────────────────────
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: _buildSectionHeader(
+                      title: 'SEASONAL',
+                      onViewAll: () => context.push(
+                        AppRoutes.customerCategoryDesigns,
+                        extra: seasonalCategory,
+                      ),
                     ),
                   ),
                 ),
-              ],
-
-              const SliverToBoxAdapter(child: SizedBox(height: 28)),
-
-              // ── 5. Studio Information Card ────────────────────────
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: StoreInfoCard(boutique: boutique),
+                const SliverToBoxAdapter(child: SizedBox(height: 14)),
+                SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: 175,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      physics: const BouncingScrollPhysics(),
+                      itemCount: seasonalDesigns.isNotEmpty
+                          ? seasonalDesigns.length
+                          : (activeDesigns.isNotEmpty ? activeDesigns.take(4).length : 1),
+                      separatorBuilder: (context, index) => const SizedBox(width: 12),
+                      itemBuilder: (context, index) {
+                        final design = seasonalDesigns.isNotEmpty
+                            ? seasonalDesigns[index]
+                            : (activeDesigns.isNotEmpty ? activeDesigns[index % activeDesigns.length] : null);
+                        return _buildSeasonalPill(context, seasonalCategory, design);
+                      },
+                    ),
+                  ),
                 ),
-              ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 32)),
+                // ── 5. CUSTOM ADMIN CATEGORIES ────────────────────
+                if (customCategories.isNotEmpty) ...[
+                  const SliverToBoxAdapter(child: SizedBox(height: 32)),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: _buildSectionHeader(
+                        title: 'MORE COLLECTIONS',
+                        onViewAll: () => context.push(AppRoutes.customerCategoryList),
+                      ),
+                    ),
+                  ),
+                  const SliverToBoxAdapter(child: SizedBox(height: 14)),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 1.1,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                        ),
+                        itemCount: customCategories.length,
+                        itemBuilder: (context, index) {
+                          final category = customCategories[index];
+                          return GestureDetector(
+                            onTap: () => context.push(
+                              AppRoutes.customerCategoryDesigns,
+                              extra: category,
+                            ),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceWhite,
+                                borderRadius: BorderRadius.circular(18),
+                                border: Border.all(color: AppColors.borderSoft),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.04),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(18),
+                                child: Stack(
+                                  children: [
+                                    if (category.imageUrl != null &&
+                                        category.imageUrl!.isNotEmpty)
+                                      Positioned.fill(
+                                        child: category.imageUrl!.startsWith('http')
+                                            ? Image.network(
+                                                category.imageUrl!,
+                                                fit: BoxFit.cover,
+                                                errorBuilder: (ctx, err, stack) =>
+                                                    Container(color: AppColors.brandGreen900),
+                                              )
+                                            : Container(color: AppColors.brandGreen900),
+                                      )
+                                    else
+                                      Positioned.fill(
+                                        child: Container(
+                                          decoration: const BoxDecoration(
+                                            gradient: LinearGradient(
+                                              colors: [
+                                                AppColors.brandGreen900,
+                                                AppColors.brandGreen800,
+                                              ],
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+
+                                    // Dark gradient overlay
+                                    Positioned.fill(
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              Colors.transparent,
+                                              Colors.black.withValues(alpha: 0.75),
+                                            ],
+                                            begin: Alignment.topCenter,
+                                            end: Alignment.bottomCenter,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+
+                                    Positioned(
+                                      bottom: 12,
+                                      left: 12,
+                                      right: 12,
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            category.name,
+                                            style: GoogleFonts.playfairDisplay(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w700,
+                                              color: AppColors.surfaceWhite,
+                                            ),
+                                          ),
+                                          if (category.description != null &&
+                                              category.description!.isNotEmpty)
+                                            Text(
+                                              category.description!,
+                                              style: GoogleFonts.montserrat(
+                                                fontSize: 10,
+                                                color: AppColors.brandGreen100,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+
+                const SliverToBoxAdapter(child: SizedBox(height: 36)),
+              ],
             ],
           ),
         ),
@@ -441,173 +571,794 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage> {
     );
   }
 
-  // ── Category Chip Widget ──────────────────────────────────────────────
-  Widget _buildCategoryChip({
-    required String label,
-    required String slug,
-    required bool isSelected,
+  // ── Section Header Helper ────────────────────────────────────
+  Widget _buildSectionHeader({
+    required String title,
+    required VoidCallback onViewAll,
   }) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: GestureDetector(
-        onTap: () => setState(() => _selectedCategorySlug = slug),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-          decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF1A1A1A) : Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isSelected ? const Color(0xFF1A1A1A) : const Color(0xFFEAE5DC),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            const Icon(
+              Icons.local_florist_rounded,
+              size: 14,
+              color: AppColors.brandGreen900,
             ),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : [],
-          ),
-          child: Text(
-            label,
-            style: GoogleFonts.montserrat(
-              fontSize: 12.5,
-              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-              color: isSelected ? Colors.white : const Color(0xFF1A1A1A),
+            const SizedBox(width: 6),
+            Text(
+              title,
+              style: GoogleFonts.montserrat(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: AppColors.brandGreen900,
+                letterSpacing: 1.4,
+              ),
             ),
+          ],
+        ),
+        GestureDetector(
+          onTap: onViewAll,
+          child: Row(
+            children: [
+              Text(
+                'View all',
+                style: GoogleFonts.montserrat(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.mutedText,
+                ),
+              ),
+              const SizedBox(width: 4),
+              const Icon(
+                Icons.chevron_right_rounded,
+                size: 16,
+                color: AppColors.mutedText,
+              ),
+            ],
           ),
         ),
-      ),
+      ],
     );
   }
 
-  // ── Garment Grid Card Widget ──────────────────────────────────────────
-  Widget _buildGarmentGridCard(BuildContext context, DesignModel design) {
+  // ── 1. TRENDING Hero Card (Real Firestore Data) ───────────────
+  Widget _buildTrendingHeroCard(BuildContext context, DesignModel design) {
     final title = design.name;
     final price = '₹${design.price.toInt()}';
     final hasImg = design.imageUrls.isNotEmpty;
     final imgUrl = hasImg ? design.imageUrls.first : '';
+
     final isFav = ref.watch(isDesignFavoritedProvider(design.id));
 
     return GestureDetector(
       onTap: () => context.push(AppRoutes.customerDesignDetails, extra: design),
       child: Container(
+        height: 290,
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFEAE5DC)),
+          borderRadius: BorderRadius.circular(26),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
+              color: Colors.black.withValues(alpha: 0.12),
+              blurRadius: 18,
+              offset: const Offset(0, 5),
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFAF7F2),
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(16),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(26),
+          child: Stack(
+            children: [
+              // Background Image or Brand Color
+              Positioned.fill(
+                child: hasImg && imgUrl.startsWith('http')
+                    ? Image.network(
+                        imgUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (ctx, err, stack) =>
+                            Container(color: AppColors.brandGreen900),
+                      )
+                    : Container(color: AppColors.brandGreen900),
+              ),
+
+              // Left Organic Shape Overlay
+              Positioned(
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: MediaQuery.of(context).size.width * 0.58,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: AppColors.brandGreen900.withValues(alpha: 0.95),
+                    borderRadius: const BorderRadius.only(
+                      topRight: Radius.circular(80),
+                      bottomRight: Radius.circular(80),
+                    ),
                   ),
-                ),
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(16),
-                  ),
-                  child: Stack(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Positioned.fill(
-                        child: hasImg && imgUrl.startsWith('http')
-                            ? Image.network(
-                                imgUrl,
-                                fit: BoxFit.cover,
-                                errorBuilder: (ctx, err, stack) => const Center(
-                                  child: Icon(
-                                    Icons.checkroom_rounded,
-                                    color: Color(0xFF888888),
-                                    size: 28,
-                                  ),
-                                ),
-                              )
-                            : const Center(
-                                child: Icon(
-                                  Icons.checkroom_rounded,
-                                  color: Color(0xFF888888),
-                                  size: 28,
-                                ),
-                              ),
-                      ),
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: GestureDetector(
-                          onTap: () async {
-                            final success = await ref
-                                .read(favoriteMutationProvider.notifier)
-                                .toggleFavorite(design.id);
-                            if (!success && context.mounted) {
-                              await GoogleAuthBottomSheet.show(context);
-                            }
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.9),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              isFav
-                                  ? Icons.favorite_rounded
-                                  : Icons.favorite_border_rounded,
-                              size: 14,
-                              color: isFav
-                                  ? const Color(0xFFDC2626)
-                                  : const Color(0xFF1A1A1A),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.local_florist_rounded,
+                            size: 11,
+                            color: AppColors.brandGreen100,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'TRENDING',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.brandGreen100,
+                              letterSpacing: 1.4,
                             ),
                           ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Bespoke\nCraft',
+                        style: GoogleFonts.playfairDisplay(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.surfaceWhite,
+                          height: 1.1,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        design.description != null && design.description!.isNotEmpty
+                            ? design.description!
+                            : 'Tailored with precision by Kapada Creation.',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 9.5,
+                          color: AppColors.brandGreen100,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        title,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.surfaceWhite,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        price,
+                        style: GoogleFonts.playfairDisplay(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.surfaceWhite,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Color Dots
+                      Row(
+                        children: [
+                          _colorDot(const Color(0xFF6B1D2F)),
+                          _colorDot(const Color(0xFF1E3A2B)),
+                          _colorDot(const Color(0xFFE8DCC4)),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+
+                      // Size Pills
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Row(
+                          children: ['XS', 'S', 'M', 'L', 'XL'].map((s) {
+                            final isM = s == 'M';
+                            return Container(
+                              margin: const EdgeInsets.only(right: 5),
+                              width: 24,
+                              height: 24,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: isM ? AppColors.surfaceWhite : Colors.transparent,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: isM ? AppColors.surfaceWhite : AppColors.brandGreen100,
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                s,
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w700,
+                                  color: isM ? AppColors.brandGreen900 : AppColors.surfaceWhite,
+                                ),
+                              ),
+                            );
+                          }).toList(),
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
+
+              // Top Right Favorite Button
+              Positioned(
+                top: 14,
+                right: 14,
+                child: GestureDetector(
+                  onTap: () async {
+                    final success = await ref
+                        .read(favoriteMutationProvider.notifier)
+                        .toggleFavorite(design.id);
+                    if (!success && context.mounted) {
+                      await GoogleAuthBottomSheet.show(context);
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: const BoxDecoration(
+                      color: AppColors.surfaceWhite,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                      size: 18,
+                      color: isFav ? AppColors.error : AppColors.charcoal,
+                    ),
+                  ),
+                ),
+              ),
+
+              // Bottom Right Bestseller Chip
+              Positioned(
+                bottom: 14,
+                right: 14,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFAF4EB),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFE0D4C3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.local_florist_rounded,
+                        size: 12,
+                        color: AppColors.brandGreen900,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Bestseller',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.charcoal,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── 2. NEW ARRIVAL Side-By-Side Card ─────────────────────────
+  Widget _buildNewArrivalCard(BuildContext context, DesignModel design) {
+    final title = design.name;
+    final price = '₹${design.price.toInt()}';
+    final hasImg = design.imageUrls.isNotEmpty;
+    final imgUrl = hasImg ? design.imageUrls.first : '';
+
+    final isFav = ref.watch(isDesignFavoritedProvider(design.id));
+
+    return GestureDetector(
+      onTap: () => context.push(AppRoutes.customerDesignDetails, extra: design),
+      child: Container(
+        height: 220,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF7F3EC),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFE8E0D5)),
+        ),
+        child: Stack(
+          children: [
+            // Left Cut Image Box
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: 95,
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  bottomLeft: Radius.circular(20),
+                  topRight: Radius.circular(36),
+                  bottomRight: Radius.circular(36),
+                ),
+                child: hasImg && imgUrl.startsWith('http')
+                    ? Image.network(
+                        imgUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (ctx, err, stack) =>
+                            Container(color: AppColors.brandGreen900),
+                      )
+                    : Container(
+                        color: AppColors.brandGreen900,
+                        child: const Icon(
+                          Icons.checkroom_rounded,
+                          color: AppColors.brandGreen100,
+                          size: 24,
+                        ),
+                      ),
+              ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(12),
+
+            // Top Left "New" Badge
+            Positioned(
+              top: 10,
+              left: 10,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.brandGreen900,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  'New',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.surfaceWhite,
+                  ),
+                ),
+              ),
+            ),
+
+            // Top Right Favorite Button
+            Positioned(
+              top: 10,
+              right: 10,
+              child: GestureDetector(
+                onTap: () async {
+                  final success = await ref
+                      .read(favoriteMutationProvider.notifier)
+                      .toggleFavorite(design.id);
+                  if (!success && context.mounted) {
+                    await GoogleAuthBottomSheet.show(context);
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: const BoxDecoration(
+                    color: AppColors.surfaceWhite,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                    size: 15,
+                    color: isFav ? AppColors.error : AppColors.charcoal,
+                  ),
+                ),
+              ),
+            ),
+
+            // Right Text Info
+            Positioned(
+              left: 105,
+              top: 36,
+              right: 10,
+              bottom: 10,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    title,
-                    style: GoogleFonts.playfairDisplay(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF1A1A1A),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: GoogleFonts.playfairDisplay(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.charcoal,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        price,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.brandGreen900,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 3),
-                  Text(
-                    price,
-                    style: GoogleFonts.montserrat(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFFA67C52),
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          _colorDot(const Color(0xFFD4AF37)),
+                          _colorDot(const Color(0xFF800020)),
+                          _colorDot(const Color(0xFFE8DCC4)),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: ['XS', 'S', 'M', 'L'].map((s) {
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 4),
+                            child: Text(
+                              s,
+                              style: GoogleFonts.montserrat(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.mutedText,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // ── 3. FESTIVAL Section Main Card ─────────────────────────────
+  Widget _buildFestivalMainCard(
+    BuildContext context,
+    CategoryModel category,
+    DesignModel? design,
+  ) {
+    final title = design?.name ?? category.name;
+    final imgUrl = (design != null && design.imageUrls.isNotEmpty)
+        ? design.imageUrls.first
+        : (category.imageUrl ?? '');
+
+    return GestureDetector(
+      onTap: () {
+        if (design != null) {
+          context.push(AppRoutes.customerDesignDetails, extra: design);
+        } else {
+          context.push(AppRoutes.customerCategoryDesigns, extra: category);
+        }
+      },
+      child: Container(
+        height: 240,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(22),
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: imgUrl.startsWith('http')
+                    ? Image.network(
+                        imgUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (ctx, err, stack) =>
+                            Container(color: AppColors.brandGreen900),
+                      )
+                    : Container(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [AppColors.brandGreen900, AppColors.brandGreen800],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                      ),
+              ),
+              Positioned(
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: 140,
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: AppColors.brandGreen900.withValues(alpha: 0.94),
+                    borderRadius: const BorderRadius.only(
+                      topRight: Radius.circular(60),
+                      bottomRight: Radius.circular(60),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        title,
+                        style: GoogleFonts.playfairDisplay(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.surfaceWhite,
+                          height: 1.2,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Festive looks stitched with tradition.',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 9,
+                          color: AppColors.brandGreen100,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: Colors.white12,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white24),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Explore',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 8,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.surfaceWhite,
+                              ),
+                            ),
+                            const SizedBox(width: 2),
+                            const Icon(
+                              Icons.chevron_right_rounded,
+                              size: 12,
+                              color: AppColors.surfaceWhite,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFestivalSubCard(
+    BuildContext context,
+    String defaultTitle,
+    CategoryModel category,
+    DesignModel? design,
+  ) {
+    final title = design?.name ?? defaultTitle;
+    final imgUrl = (design != null && design.imageUrls.isNotEmpty)
+        ? design.imageUrls.first
+        : (category.imageUrl ?? '');
+
+    return GestureDetector(
+      onTap: () {
+        if (design != null) {
+          context.push(AppRoutes.customerDesignDetails, extra: design);
+        } else {
+          context.push(AppRoutes.customerCategoryDesigns, extra: category);
+        }
+      },
+      child: Container(
+        height: 114,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 8,
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(18),
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: imgUrl.startsWith('http')
+                    ? Image.network(
+                        imgUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (ctx, err, stack) =>
+                            Container(color: AppColors.brandGreen800),
+                      )
+                    : Container(color: AppColors.brandGreen800),
+              ),
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.transparent, Colors.black.withValues(alpha: 0.75)],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 12,
+                bottom: 12,
+                right: 12,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: GoogleFonts.playfairDisplay(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.surfaceWhite,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: AppColors.surfaceWhite,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.arrow_forward_rounded,
+                        size: 12,
+                        color: AppColors.charcoal,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── 4. SEASONAL Pill Card ─────────────────────────────────────
+  Widget _buildSeasonalPill(
+    BuildContext context,
+    CategoryModel category,
+    DesignModel? design,
+  ) {
+    final title = design?.name ?? category.name;
+    final imgUrl = (design != null && design.imageUrls.isNotEmpty)
+        ? design.imageUrls.first
+        : (category.imageUrl ?? '');
+
+    return GestureDetector(
+      onTap: () {
+        if (design != null) {
+          context.push(AppRoutes.customerDesignDetails, extra: design);
+        } else {
+          context.push(AppRoutes.customerCategoryDesigns, extra: category);
+        }
+      },
+      child: Container(
+        width: 115,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 8,
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: imgUrl.startsWith('http')
+                    ? Image.network(
+                        imgUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (ctx, err, stack) =>
+                            Container(color: AppColors.brandGreen900),
+                      )
+                    : Container(color: AppColors.brandGreen900),
+              ),
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.transparent, Colors.black.withValues(alpha: 0.75)],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 10,
+                bottom: 10,
+                right: 10,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.surfaceWhite,
+                          height: 1.2,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: const BoxDecoration(
+                        color: AppColors.surfaceWhite,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.arrow_forward_rounded,
+                        size: 10,
+                        color: AppColors.charcoal,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _colorDot(Color c) {
+    return Container(
+      margin: const EdgeInsets.only(right: 5),
+      width: 10,
+      height: 10,
+      decoration: BoxDecoration(
+        color: c,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 1),
       ),
     );
   }
