@@ -839,7 +839,7 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage> {
                           .read(favoriteMutationProvider.notifier)
                           .toggleFavorite(design.id);
                       if (!success && context.mounted) {
-                        GoogleAuthBottomSheet.show(context);
+                        await GoogleAuthBottomSheet.show(context);
                       }
                     }
                   },
@@ -974,7 +974,7 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage> {
                       .read(favoriteMutationProvider.notifier)
                       .toggleFavorite(design.id);
                   if (!success && context.mounted) {
-                    GoogleAuthBottomSheet.show(context);
+                    await GoogleAuthBottomSheet.show(context);
                   }
                 },
                 child: Container(
