@@ -6,7 +6,6 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../app/app_routes.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../auth/application/providers/auth_providers.dart';
 import '../../../auth/presentation/widgets/google_auth_bottom_sheet.dart';
 import '../../../boutique/application/providers/boutique_providers.dart';
@@ -15,7 +14,7 @@ import '../../../design/application/providers/favorite_providers.dart';
 import '../../../stitching/application/providers/stitching_providers.dart';
 import '../../../stitching/domain/models/stitching_order_model.dart';
 
-/// Kapada Creation Customer App — Green Leather & Gold Luxury Customer Profile Page.
+/// Kapada Creation Customer App — Ultra-Premium Luxury Profile Page.
 class CustomerProfilePage extends ConsumerWidget {
   const CustomerProfilePage({super.key});
 
@@ -43,12 +42,12 @@ class CustomerProfilePage extends ConsumerWidget {
     final photoUrl = customerProfile?.photoUrl ?? user?.photoURL;
 
     return Scaffold(
-      backgroundColor: AppColors.warmIvory,
+      backgroundColor: const Color(0xFFFAF7F2),
       body: SafeArea(
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
-            // ── 1. Top Header ─────────────────────────────────────
+            // ── 1. Header ─────────────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
@@ -56,11 +55,11 @@ class CustomerProfilePage extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Profile & Studio',
+                      'My Profile & Studio',
                       style: GoogleFonts.playfairDisplay(
-                        fontSize: 28,
+                        fontSize: 26,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.charcoal,
+                        color: const Color(0xFF1A1A1A),
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -68,7 +67,7 @@ class CustomerProfilePage extends ConsumerWidget {
                       'Kapada Creation Boutique & Personal Account',
                       style: GoogleFonts.montserrat(
                         fontSize: 12,
-                        color: AppColors.mutedText,
+                        color: const Color(0xFF666666),
                       ),
                     ),
                   ],
@@ -76,13 +75,13 @@ class CustomerProfilePage extends ConsumerWidget {
               ),
             ),
 
-            // ── 2. Green Luxury Profile Card ──────────────────────
+            // ── 2. Profile Card ───────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: !isAuthenticated
                     ? _GuestProfileCard()
-                    : _GreenProfileCard(
+                    : _UserProfileCard(
                         displayName: displayName,
                         email: email,
                         phone: phone,
@@ -94,7 +93,7 @@ class CustomerProfilePage extends ConsumerWidget {
 
             const SliverToBoxAdapter(child: SizedBox(height: 20)),
 
-            // ── 3. Quick Action Hub (Orders & Favorites) ──────────
+            // ── 3. Activity Hub (Orders & Favorites) ──────────────
             if (isAuthenticated)
               SliverToBoxAdapter(
                 child: Padding(
@@ -107,7 +106,7 @@ class CustomerProfilePage extends ConsumerWidget {
                         style: GoogleFonts.montserrat(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.mutedText,
+                          color: const Color(0xFF888888),
                           letterSpacing: 1.1,
                         ),
                       ),
@@ -142,7 +141,7 @@ class CustomerProfilePage extends ConsumerWidget {
 
             const SliverToBoxAdapter(child: SizedBox(height: 20)),
 
-            // ── 4. Green Leather Shop Info Card ───────────────────
+            // ── 4. Studio Information Card ────────────────────────
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -152,7 +151,7 @@ class CustomerProfilePage extends ConsumerWidget {
 
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
-            // ── 5. Sign Out & App Version Footer ──────────────────
+            // ── 5. Sign Out & Footer ──────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -166,20 +165,20 @@ class CustomerProfilePage extends ConsumerWidget {
                             final confirm = await showDialog<bool>(
                               context: context,
                               builder: (ctx) => AlertDialog(
-                                backgroundColor: AppColors.surfaceWhite,
+                                backgroundColor: Colors.white,
                                 title: Text(
                                   'Sign Out',
                                   style: GoogleFonts.playfairDisplay(
                                     fontSize: 20,
                                     fontWeight: FontWeight.w700,
-                                    color: AppColors.charcoal,
+                                    color: const Color(0xFF1A1A1A),
                                   ),
                                 ),
                                 content: Text(
                                   'Are you sure you want to sign out of Kapada Creation?',
                                   style: GoogleFonts.montserrat(
                                     fontSize: 14,
-                                    color: AppColors.charcoal,
+                                    color: const Color(0xFF1A1A1A),
                                   ),
                                 ),
                                 actions: [
@@ -188,7 +187,7 @@ class CustomerProfilePage extends ConsumerWidget {
                                     child: Text(
                                       'Cancel',
                                       style: GoogleFonts.montserrat(
-                                        color: AppColors.mutedText,
+                                        color: const Color(0xFF666666),
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
@@ -257,7 +256,7 @@ class CustomerProfilePage extends ConsumerWidget {
                               style: GoogleFonts.montserrat(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.mutedText,
+                                color: const Color(0xFF666666),
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -265,7 +264,7 @@ class CustomerProfilePage extends ConsumerWidget {
                               version,
                               style: GoogleFonts.montserrat(
                                 fontSize: 11,
-                                color: AppColors.mutedText.withValues(alpha: 0.7),
+                                color: const Color(0xFF888888),
                               ),
                             ),
                           ],
@@ -285,8 +284,8 @@ class CustomerProfilePage extends ConsumerWidget {
   }
 }
 
-class _GreenProfileCard extends StatelessWidget {
-  const _GreenProfileCard({
+class _UserProfileCard extends StatelessWidget {
+  const _UserProfileCard({
     required this.displayName,
     required this.email,
     required this.phone,
@@ -305,21 +304,17 @@ class _GreenProfileCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1B5E20), Color(0xFF144717)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: const Color(0xFFC5A880).withValues(alpha: 0.6),
-          width: 1.5,
+          color: const Color(0xFFC5A880).withValues(alpha: 0.5),
+          width: 1.2,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.12),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -330,14 +325,14 @@ class _GreenProfileCard extends StatelessWidget {
               Stack(
                 children: [
                   Container(
-                    width: 62,
-                    height: 62,
+                    width: 60,
+                    height: 60,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
+                      color: const Color(0xFFFAF7F2),
                       shape: BoxShape.circle,
                       border: Border.all(
                         color: const Color(0xFFC5A880),
-                        width: 1.8,
+                        width: 1.5,
                       ),
                       image: photoUrl != null && photoUrl!.isNotEmpty
                           ? DecorationImage(
@@ -353,9 +348,9 @@ class _GreenProfileCard extends StatelessWidget {
                                   ? displayName[0].toUpperCase()
                                   : 'C',
                               style: GoogleFonts.playfairDisplay(
-                                fontSize: 26,
+                                fontSize: 24,
                                 fontWeight: FontWeight.w700,
-                                color: Colors.white,
+                                color: const Color(0xFF1A1A1A),
                               ),
                             ),
                           )
@@ -369,7 +364,7 @@ class _GreenProfileCard extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(5),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFC5A880),
+                          color: const Color(0xFF1A1A1A),
                           shape: BoxShape.circle,
                           border: Border.all(color: Colors.white, width: 1.5),
                         ),
@@ -391,9 +386,9 @@ class _GreenProfileCard extends StatelessWidget {
                     Text(
                       displayName,
                       style: GoogleFonts.playfairDisplay(
-                        fontSize: 20,
+                        fontSize: 19,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                        color: const Color(0xFF1A1A1A),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -403,7 +398,7 @@ class _GreenProfileCard extends StatelessWidget {
                       email,
                       style: GoogleFonts.montserrat(
                         fontSize: 12.5,
-                        color: Colors.white.withValues(alpha: 0.85),
+                        color: const Color(0xFF666666),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -414,7 +409,7 @@ class _GreenProfileCard extends StatelessWidget {
                         phone,
                         style: GoogleFonts.montserrat(
                           fontSize: 12,
-                          color: const Color(0xFFC5A880),
+                          color: const Color(0xFFA67C52),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -425,10 +420,7 @@ class _GreenProfileCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          Divider(
-            height: 1,
-            color: const Color(0xFFC5A880).withValues(alpha: 0.3),
-          ),
+          const Divider(height: 1, color: Color(0xFFEAE5DC)),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -442,11 +434,11 @@ class _GreenProfileCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'GOOGLE VERIFIED VIP MEMBER',
+                    'GOOGLE VERIFIED MEMBER',
                     style: GoogleFonts.montserrat(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFFC5A880),
+                      color: const Color(0xFFA67C52),
                       letterSpacing: 0.8,
                     ),
                   ),
@@ -457,9 +449,9 @@ class _GreenProfileCard extends StatelessWidget {
                 child: Text(
                   'Edit Profile →',
                   style: GoogleFonts.montserrat(
-                    fontSize: 11,
+                    fontSize: 11.5,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                    color: const Color(0xFF1A1A1A),
                   ),
                 ),
               ),
@@ -477,21 +469,17 @@ class _GuestProfileCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1B5E20), Color(0xFF144717)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: const Color(0xFFC5A880).withValues(alpha: 0.6),
-          width: 1.5,
+          color: const Color(0xFFC5A880).withValues(alpha: 0.5),
+          width: 1.2,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.12),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -501,15 +489,15 @@ class _GuestProfileCard extends StatelessWidget {
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
+              color: const Color(0xFFFAF7F2),
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFC5A880), width: 1.5),
+              border: Border.all(color: const Color(0xFFC5A880), width: 1.2),
             ),
             child: Center(
               child: PhosphorIcon(
                 PhosphorIcons.user(PhosphorIconsStyle.bold),
-                size: 28,
-                color: const Color(0xFFC5A880),
+                size: 26,
+                color: const Color(0xFF1A1A1A),
               ),
             ),
           ),
@@ -519,7 +507,7 @@ class _GuestProfileCard extends StatelessWidget {
             style: GoogleFonts.playfairDisplay(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: Colors.white,
+              color: const Color(0xFF1A1A1A),
             ),
           ),
           const SizedBox(height: 4),
@@ -527,7 +515,7 @@ class _GuestProfileCard extends StatelessWidget {
             'Sign in to save favorite designs and request custom boutique stitching.',
             style: GoogleFonts.montserrat(
               fontSize: 12,
-              color: Colors.white.withValues(alpha: 0.85),
+              color: const Color(0xFF666666),
               height: 1.4,
             ),
             textAlign: TextAlign.center,
@@ -551,7 +539,7 @@ class _GuestProfileCard extends StatelessWidget {
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFC5A880),
+                backgroundColor: const Color(0xFF1A1A1A),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -587,9 +575,9 @@ class _QuickActionCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AppColors.surfaceWhite,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.borderSoft),
+          border: Border.all(color: const Color(0xFFEAE5DC)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.02),
@@ -607,20 +595,20 @@ class _QuickActionCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppColors.brandGreen800.withValues(alpha: 0.08),
+                    color: const Color(0xFFFAF7F2),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: PhosphorIcon(
                     icon,
                     size: 20,
-                    color: AppColors.brandGreen800,
+                    color: const Color(0xFF1A1A1A),
                   ),
                 ),
                 if (badgeText != null)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                     decoration: BoxDecoration(
-                      color: (badgeColor ?? AppColors.brandGreen800).withValues(alpha: 0.1),
+                      color: (badgeColor ?? const Color(0xFF1A1A1A)).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -628,7 +616,7 @@ class _QuickActionCard extends StatelessWidget {
                       style: GoogleFonts.montserrat(
                         fontSize: 10.5,
                         fontWeight: FontWeight.w700,
-                        color: badgeColor ?? AppColors.brandGreen800,
+                        color: badgeColor ?? const Color(0xFF1A1A1A),
                       ),
                     ),
                   ),
@@ -640,7 +628,7 @@ class _QuickActionCard extends StatelessWidget {
               style: GoogleFonts.montserrat(
                 fontSize: 13.5,
                 fontWeight: FontWeight.w700,
-                color: AppColors.charcoal,
+                color: const Color(0xFF1A1A1A),
               ),
             ),
           ],
