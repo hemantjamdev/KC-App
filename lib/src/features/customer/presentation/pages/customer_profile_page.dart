@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../app/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -10,10 +11,11 @@ import '../../../auth/application/providers/auth_providers.dart';
 import '../../../auth/presentation/widgets/google_auth_bottom_sheet.dart';
 import '../../../boutique/application/providers/boutique_providers.dart';
 import '../../../boutique/presentation/widgets/store_info_card.dart';
+import '../../../design/application/providers/favorite_providers.dart';
+import '../../../stitching/application/providers/stitching_providers.dart';
+import '../../../stitching/domain/models/stitching_order_model.dart';
 
-/// Customer Profile Tab Page.
-/// Displays guest overview & login CTA when unauthenticated,
-/// or full customer profile details, studio location info, app version, and sign out when authenticated.
+/// Kapada Creation Customer App — Redesigned Luxury Customer Profile Page.
 class CustomerProfilePage extends ConsumerWidget {
   const CustomerProfilePage({super.key});
 
@@ -22,9 +24,12 @@ class CustomerProfilePage extends ConsumerWidget {
     final user = ref.watch(currentCustomerUserProvider);
     final isAuthenticated = ref.watch(isAuthenticatedProvider);
     final customerProfile = ref.watch(customerProfileProvider).valueOrNull;
-    final boutique =
-        ref.watch(selectedBoutiqueProvider) ??
+    final boutique = ref.watch(selectedBoutiqueProvider) ??
         ref.watch(autoSelectedBoutiqueProvider);
+
+    final favoriteIds = ref.watch(customerFavoriteIdsProvider).valueOrNull ?? [];
+    final stitchingOrders = ref.watch(customerOrderListProvider(user?.uid ?? '')).valueOrNull ?? [];
+    final activeOrdersCount = stitchingOrders.where((o) => o.status != StitchingOrderStatus.completed).length;
 
     final cName = customerProfile?.displayName;
     final displayName = (cName != null && cName.isNotEmpty)
@@ -43,7 +48,7 @@ class CustomerProfilePage extends ConsumerWidget {
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
-            // ── Header ─────────────────────────────────────────
+            // ── 1. Top Header ─────────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
@@ -51,18 +56,18 @@ class CustomerProfilePage extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Profile',
+                      'Profile & Studio',
                       style: GoogleFonts.playfairDisplay(
-                        fontSize: 30,
+                        fontSize: 28,
                         fontWeight: FontWeight.w700,
                         color: AppColors.charcoal,
                       ),
                     ),
+                    const SizedBox(height: 2),
                     Text(
-                      'Kapada Creation Studio & Account',
+                      'Kapada Creation Boutique & Personal Account',
                       style: GoogleFonts.montserrat(
-                        fontSize: 13,
-                        fontStyle: FontStyle.italic,
+                        fontSize: 12,
                         color: AppColors.mutedText,
                       ),
                     ),
@@ -71,7 +76,7 @@ class CustomerProfilePage extends ConsumerWidget {
               ),
             ),
 
-            // ── Guest Card OR Logged-in Profile Card ──────────
+            // ── 2. User Profile Card ──────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -82,15 +87,62 @@ class CustomerProfilePage extends ConsumerWidget {
                         email: email,
                         phone: phone,
                         photoUrl: photoUrl,
-                        onEdit: () =>
-                            context.push(AppRoutes.customerProfileEdit),
+                        onEdit: () => context.push(AppRoutes.customerProfileEdit),
                       ),
               ),
             ),
 
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+            // ── 3. Quick Action Hub (Orders, Favorites, Notifications) ──
+            if (isAuthenticated)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'MY ACTIVITY & SAVED',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.mutedText,
+                          letterSpacing: 1.1,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _QuickActionCard(
+                              icon: PhosphorIcons.scissors(PhosphorIconsStyle.bold),
+                              title: 'Stitching Orders',
+                              badgeText: activeOrdersCount > 0 ? '$activeOrdersCount Active' : null,
+                              badgeColor: const Color(0xFF10B981),
+                              onTap: () => context.push(AppRoutes.customerStitchingList),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _QuickActionCard(
+                              icon: PhosphorIcons.heart(PhosphorIconsStyle.bold),
+                              title: 'Favorites',
+                              badgeText: favoriteIds.isNotEmpty ? '${favoriteIds.length} Saved' : null,
+                              badgeColor: const Color(0xFFC5A880),
+                              onTap: () => context.push(AppRoutes.customerFavorites),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
             const SliverToBoxAdapter(child: SizedBox(height: 20)),
 
-            // ── Studio Information Card ────────────────────────
+            // ── 4. Studio Information Card ────────────────────────
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -100,7 +152,7 @@ class CustomerProfilePage extends ConsumerWidget {
 
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
-            // ── Sign Out & Clean Version Footer ───────────────
+            // ── 5. Sign Out & App Version Footer ──────────────────
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -114,28 +166,45 @@ class CustomerProfilePage extends ConsumerWidget {
                             final confirm = await showDialog<bool>(
                               context: context,
                               builder: (ctx) => AlertDialog(
+                                backgroundColor: AppColors.surfaceWhite,
                                 title: Text(
                                   'Sign Out',
                                   style: GoogleFonts.playfairDisplay(
-                                    fontSize: 18,
+                                    fontSize: 20,
                                     fontWeight: FontWeight.w700,
+                                    color: AppColors.charcoal,
                                   ),
                                 ),
                                 content: Text(
                                   'Are you sure you want to sign out of Kapada Creation?',
-                                  style: GoogleFonts.montserrat(fontSize: 13),
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 14,
+                                    color: AppColors.charcoal,
+                                  ),
                                 ),
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.pop(ctx, false),
-                                    child: const Text('Cancel'),
+                                    child: Text(
+                                      'Cancel',
+                                      style: GoogleFonts.montserrat(
+                                        color: AppColors.mutedText,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
                                   ),
                                   ElevatedButton(
                                     onPressed: () => Navigator.pop(ctx, true),
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: AppColors.error,
+                                      backgroundColor: const Color(0xFFDC2626),
                                     ),
-                                    child: const Text('Sign Out'),
+                                    child: Text(
+                                      'Sign Out',
+                                      style: GoogleFonts.montserrat(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -150,21 +219,25 @@ class CustomerProfilePage extends ConsumerWidget {
                               }
                             }
                           },
-                          icon: const Icon(
-                            Icons.logout_rounded,
-                            color: AppColors.error,
+                          icon: PhosphorIcon(
+                            PhosphorIcons.signOut(PhosphorIconsStyle.bold),
+                            color: const Color(0xFFDC2626),
                             size: 18,
                           ),
                           label: Text(
                             'Sign Out',
                             style: GoogleFonts.montserrat(
-                              color: AppColors.error,
+                              color: const Color(0xFFDC2626),
+                              fontSize: 14,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                           style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: AppColors.error),
+                            side: const BorderSide(color: Color(0xFFDC2626)),
                             padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
                         ),
                       ),
@@ -178,14 +251,25 @@ class CustomerProfilePage extends ConsumerWidget {
                         final version = snapshot.hasData
                             ? 'v${snapshot.data!.version} (${snapshot.data!.buildNumber})'
                             : 'v1.0.0';
-                        return Text(
-                          'Kapada Creation App  •  $version',
-                          style: GoogleFonts.montserrat(
-                            fontSize: 11,
-                            color: AppColors.mutedText,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          textAlign: TextAlign.center,
+                        return Column(
+                          children: [
+                            Text(
+                              'Kapada Creation Customer App',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.mutedText,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              version,
+                              style: GoogleFonts.montserrat(
+                                fontSize: 11,
+                                color: AppColors.mutedText.withValues(alpha: 0.7),
+                              ),
+                            ),
+                          ],
                         );
                       },
                     ),
@@ -206,40 +290,48 @@ class _GuestProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.surfaceWhite,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppColors.borderSoft),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
         children: [
           Container(
-            width: 64,
-            height: 64,
-            decoration: const BoxDecoration(
-              color: AppColors.brandGreen50,
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: AppColors.brandGreen800.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.account_circle_outlined,
-              size: 36,
-              color: AppColors.brandGreen800,
+            child: Center(
+              child: PhosphorIcon(
+                PhosphorIcons.user(PhosphorIconsStyle.bold),
+                size: 28,
+                color: AppColors.brandGreen800,
+              ),
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Text(
             'Welcome to Kapada Creation',
             style: GoogleFonts.playfairDisplay(
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: FontWeight.w700,
               color: AppColors.charcoal,
             ),
-            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
-            'Sign in with Google to bookmark styles, request tailoring, and receive order updates.',
+            'Sign in to save favorite designs and request custom boutique stitching.',
             style: GoogleFonts.montserrat(
               fontSize: 12,
               color: AppColors.mutedText,
@@ -247,24 +339,29 @@ class _GuestProfileCard extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
-            height: 46,
-            child: ElevatedButton(
+            child: ElevatedButton.icon(
               onPressed: () => GoogleAuthBottomSheet.show(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.brandGreen900,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+              icon: PhosphorIcon(
+                PhosphorIcons.googleLogo(PhosphorIconsStyle.bold),
+                size: 18,
+                color: Colors.white,
+              ),
+              label: Text(
+                'Sign In with Google',
+                style: GoogleFonts.montserrat(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
                 ),
               ),
-              child: Text(
-                'Continue with Google',
-                style: GoogleFonts.montserrat(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.surfaceWhite,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.brandGreen800,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
             ),
@@ -293,32 +390,77 @@ class _LoggedInProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surfaceWhite,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppColors.borderSoft),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 30,
-            backgroundColor: AppColors.brandGreen100,
-            backgroundImage: photoUrl != null && photoUrl!.isNotEmpty
-                ? NetworkImage(photoUrl!)
-                : null,
-            child: photoUrl == null || photoUrl!.isEmpty
-                ? Text(
-                    displayName.isNotEmpty ? displayName[0].toUpperCase() : 'C',
-                    style: GoogleFonts.playfairDisplay(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.brandGreen900,
+          Stack(
+            children: [
+              Container(
+                width: 58,
+                height: 58,
+                decoration: BoxDecoration(
+                  color: AppColors.brandGreen800.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: AppColors.brandGreen800.withValues(alpha: 0.2),
+                  ),
+                  image: photoUrl != null && photoUrl!.isNotEmpty
+                      ? DecorationImage(
+                          image: NetworkImage(photoUrl!),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
+                ),
+                child: photoUrl == null || photoUrl!.isEmpty
+                    ? Center(
+                        child: Text(
+                          displayName.isNotEmpty
+                              ? displayName[0].toUpperCase()
+                              : 'C',
+                          style: GoogleFonts.playfairDisplay(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.brandGreen800,
+                          ),
+                        ),
+                      )
+                    : null,
+              ),
+              Positioned(
+                right: 0,
+                bottom: 0,
+                child: GestureDetector(
+                  onTap: onEdit,
+                  child: Container(
+                    padding: const EdgeInsets.all(5),
+                    decoration: BoxDecoration(
+                      color: AppColors.brandGreen800,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 1.5),
                     ),
-                  )
-                : null,
+                    child: PhosphorIcon(
+                      PhosphorIcons.pencilSimple(PhosphorIconsStyle.bold),
+                      color: Colors.white,
+                      size: 11,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -326,39 +468,36 @@ class _LoggedInProfileCard extends StatelessWidget {
                 Text(
                   displayName,
                   style: GoogleFonts.playfairDisplay(
-                    fontSize: 20,
+                    fontSize: 18,
                     fontWeight: FontWeight.w700,
                     color: AppColors.charcoal,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
+                const SizedBox(height: 2),
                 Text(
                   email,
                   style: GoogleFonts.montserrat(
-                    fontSize: 12,
+                    fontSize: 12.5,
                     color: AppColors.mutedText,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                if (phone.isNotEmpty) ...[
+                if (phone != 'No phone number') ...[
                   const SizedBox(height: 2),
                   Text(
                     phone,
                     style: GoogleFonts.montserrat(
                       fontSize: 12,
                       color: AppColors.mutedText,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
               ],
             ),
-          ),
-          IconButton(
-            icon: const Icon(
-              Icons.edit_outlined,
-              color: AppColors.brandGreen800,
-              size: 20,
-            ),
-            onPressed: onEdit,
-            tooltip: 'Edit Profile',
           ),
         ],
       ),
@@ -366,4 +505,87 @@ class _LoggedInProfileCard extends StatelessWidget {
   }
 }
 
+class _QuickActionCard extends StatelessWidget {
+  const _QuickActionCard({
+    required this.icon,
+    required this.title,
+    this.badgeText,
+    this.badgeColor,
+    required this.onTap,
+  });
 
+  final IconData icon;
+  final String title;
+  final String? badgeText;
+  final Color? badgeColor;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceWhite,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.borderSoft),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.brandGreen800.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: PhosphorIcon(
+                    icon,
+                    size: 20,
+                    color: AppColors.brandGreen800,
+                  ),
+                ),
+                if (badgeText != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: (badgeColor ?? AppColors.brandGreen800).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      badgeText!,
+                      style: GoogleFonts.montserrat(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
+                        color: badgeColor ?? AppColors.brandGreen800,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: GoogleFonts.montserrat(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w700,
+                color: AppColors.charcoal,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

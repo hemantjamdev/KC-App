@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../app/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -16,8 +17,9 @@ import '../../../design/application/providers/design_providers.dart';
 import '../../../design/application/providers/favorite_providers.dart';
 import '../../../design/domain/models/design_model.dart';
 import '../../../notification/application/providers/notification_providers.dart';
+import '../../../stitching/presentation/widgets/stitching_request_bottom_sheet.dart';
 
-/// Kapada Creation Customer App — Clean, Elegant Luxury Home Dashboard.
+/// Kapada Creation Customer App — Modern Redesigned Luxury Home Dashboard.
 class CustomerHomePage extends ConsumerStatefulWidget {
   const CustomerHomePage({super.key});
 
@@ -105,11 +107,6 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage> {
     // Hero Design (Featured)
     final heroDesign = activeDesigns.isNotEmpty ? activeDesigns.first : null;
 
-    // New Arrivals
-    final newArrivals = activeDesigns.length > 1
-        ? activeDesigns.skip(1).take(6).toList()
-        : activeDesigns;
-
     return Scaffold(
       backgroundColor: AppColors.warmIvory,
       body: SafeArea(
@@ -127,7 +124,7 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage> {
               parent: BouncingScrollPhysics(),
             ),
             slivers: [
-              // ── 1. Top Header (Matches Admin App Header) ─────────
+              // ── 1. Top Header ────────────────────────────────────
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
@@ -147,7 +144,7 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage> {
                                 letterSpacing: 0.5,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 3),
                             Text.rich(
                               TextSpan(
                                 children: [
@@ -163,9 +160,9 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage> {
                                   TextSpan(
                                     text: formattedCustomerName,
                                     style: GoogleFonts.playfairDisplay(
-                                      fontSize: 18,
+                                      fontSize: 20,
                                       fontWeight: FontWeight.w600,
-                                      color: AppColors.mutedText,
+                                      color: AppColors.brandGreen800,
                                     ),
                                   ),
                                 ],
@@ -183,11 +180,18 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage> {
                               color: AppColors.surfaceWhite,
                               shape: BoxShape.circle,
                               border: Border.all(color: AppColors.borderSoft),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.03),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
                             child: IconButton(
-                              icon: const Icon(
-                                Icons.notifications_none_rounded,
-                                size: 22,
+                              icon: PhosphorIcon(
+                                PhosphorIcons.bellRinging(PhosphorIconsStyle.bold),
+                                size: 20,
                                 color: AppColors.charcoal,
                               ),
                               onPressed: () => context.push(
@@ -198,19 +202,19 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage> {
                           ),
                           if (unreadNotificationCount > 0)
                             Positioned(
-                              right: 6,
-                              top: 6,
+                              right: 2,
+                              top: 2,
                               child: Container(
                                 padding: const EdgeInsets.all(4),
                                 decoration: const BoxDecoration(
-                                  color: AppColors.error,
+                                  color: Color(0xFFDC2626),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Text(
                                   '$unreadNotificationCount',
-                                  style: const TextStyle(
+                                  style: GoogleFonts.montserrat(
                                     color: Colors.white,
-                                    fontSize: 9,
+                                    fontSize: 10,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -223,162 +227,180 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage> {
                 ),
               ),
 
-              // ── 2. Category Filter Bar ──────────────────────────
+              // ── 2. Editorial Hero Featured Banner ────────────────
               SliverToBoxAdapter(
-                child: Container(
-                  height: 42,
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    physics: const BouncingScrollPhysics(),
-                    children: [
-                      _buildCategoryChip(
-                        label: 'All Styles',
-                        slug: 'all',
-                        isSelected: _selectedCategorySlug == 'all',
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF1B5E20), Color(0xFF2E7D32)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                      ...categoriesWithProducts.map((cat) {
-                        return _buildCategoryChip(
-                          label: cat.name,
-                          slug: cat.slug.isNotEmpty ? cat.slug : cat.id,
-                          isSelected: _selectedCategorySlug == (cat.slug.isNotEmpty ? cat.slug : cat.id),
-                        );
-                      }),
-                    ],
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            PhosphorIcon(
+                              PhosphorIcons.sparkle(PhosphorIconsStyle.fill),
+                              size: 14,
+                              color: const Color(0xFFC5A880),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'KAPADA CREATION BOUTIQUE',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFFC5A880),
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          'Bespoke Bridal Couture\n& Custom Tailoring',
+                          style: GoogleFonts.playfairDisplay(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            height: 1.25,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Crafted with tradition, designed for timeless elegance.',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 12.5,
+                            color: Colors.white.withValues(alpha: 0.85),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        GestureDetector(
+                          onTap: () => StitchingRequestBottomSheet.show(context),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFC5A880),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Request Custom Stitching',
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                PhosphorIcon(
+                                  PhosphorIcons.arrowRight(PhosphorIconsStyle.bold),
+                                  size: 14,
+                                  color: Colors.white,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 12)),
+              const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
-              if (isLoading)
-                const SliverFillRemaining(
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.charcoal,
-                      strokeWidth: 2,
-                    ),
-                  ),
-                )
-              else if (activeDesigns.isEmpty)
-                SliverFillRemaining(
-                  child: AppEmptyState(
-                    icon: Icons.checkroom_rounded,
-                    title: 'No designs available',
-                    message:
-                        'The studio collection is currently being updated. Please check back shortly.',
-                    actionLabel: 'Refresh',
-                    onAction: () => ref.invalidate(designListProvider),
-                  ),
-                )
-              else ...[
-                // If a specific category filter is selected, show filtered grid directly
-                if (_selectedCategorySlug != 'all') ...[
-                  SliverToBoxAdapter(
-                    child: Padding(
+              // ── 3. Category Filter Chips Bar ─────────────────────
+              SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Text(
-                        'FILTERED RESULTS (${filteredDesigns.length})',
+                        'EXPLORE COLLECTIONS',
                         style: GoogleFonts.montserrat(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                           color: AppColors.mutedText,
-                          letterSpacing: 1.2,
+                          letterSpacing: 1.1,
                         ),
                       ),
                     ),
-                  ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 12)),
-                  SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    sliver: SliverList.separated(
-                      itemCount: filteredDesigns.length,
-                      separatorBuilder: (ctx, idx) =>
-                          const SizedBox(height: 14),
-                      itemBuilder: (context, index) {
-                        return _buildHorizontalProductTile(
-                            context, filteredDesigns[index]);
-                      },
-                    ),
-                  ),
-                ] else ...[
-                  // ── 3. Featured Hero Showcase Card ──────────────────
-                  if (heroDesign != null) ...[
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: _buildHeroCard(context, heroDesign),
+                    const SizedBox(height: 10),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        children: [
+                          _buildCategoryPill(
+                            label: 'All Garments',
+                            slug: 'all',
+                            isSelected: _selectedCategorySlug == 'all',
+                          ),
+                          ...categoriesWithProducts.map((cat) {
+                            final slug = cat.slug.isNotEmpty ? cat.slug : cat.id;
+                            return _buildCategoryPill(
+                              label: cat.name,
+                              slug: slug,
+                              isSelected: _selectedCategorySlug == slug,
+                            );
+                          }),
+                        ],
                       ),
                     ),
-                    const SliverToBoxAdapter(child: SizedBox(height: 24)),
                   ],
+                ),
+              ),
 
-                  // ── 4. New Arrivals Section ────────────────────────
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: _buildSectionHeader(
-                        title: 'NEW ARRIVALS',
-                        onViewAll: () => context.push(
-                          '${AppRoutes.customerSectionListing}?section=${Uri.encodeComponent('New Arrivals')}',
-                        ),
+              const SliverToBoxAdapter(child: SizedBox(height: 20)),
+
+              // ── 4. Main Products Display ─────────────────────────
+              if (isLoading)
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 40),
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.brandGreen800,
                       ),
                     ),
                   ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 12)),
-                  SliverToBoxAdapter(
-                    child: SizedBox(
-                      height: 240,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        physics: const BouncingScrollPhysics(),
-                        itemCount: newArrivals.length,
-                        separatorBuilder: (ctx, idx) =>
-                            const SizedBox(width: 14),
-                        itemBuilder: (context, index) {
-                          return SizedBox(
-                            width: 155,
-                            child: _buildProductCard(context, newArrivals[index]),
-                          );
-                        },
-                      ),
+                )
+              else if (filteredDesigns.isEmpty)
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 40),
+                    child: AppEmptyState(
+                      title: 'No Garments Found',
+                      message: 'No designs match the selected category.',
+                      icon: Icons.style_outlined,
                     ),
                   ),
-
-                  const SliverToBoxAdapter(child: SizedBox(height: 28)),
-
-                  // ── 5. All Studio Collections List ──────────────────
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: _buildSectionHeader(
-                        title: 'CURATED COLLECTION',
-                        onViewAll: () => context.push(
-                          '${AppRoutes.customerSectionListing}?section=${Uri.encodeComponent('Curated Collection')}',
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 12)),
-
-                  SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    sliver: SliverList.separated(
-                      itemCount: activeDesigns.length,
-                      separatorBuilder: (ctx, idx) =>
-                          const SizedBox(height: 14),
-                      itemBuilder: (context, index) {
-                        final design = activeDesigns[index];
-                        return _buildHorizontalProductTile(context, design);
-                      },
-                    ),
-                  ),
-
-                  const SliverToBoxAdapter(child: SizedBox(height: 28)),
-
-                  // ── 6. Studio Location & Store Info ────────────────
+                )
+              else ...[
+                // Hero Highlight Card (if available)
+                if (heroDesign != null && _selectedCategorySlug == 'all') ...[
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -386,24 +408,78 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'VISIT OUR STUDIO',
+                            'FEATURED HIGHLIGHT',
                             style: GoogleFonts.montserrat(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                               color: AppColors.mutedText,
-                              letterSpacing: 1.2,
+                              letterSpacing: 1.1,
                             ),
                           ),
                           const SizedBox(height: 10),
-                          StoreInfoCard(boutique: boutique),
+                          _buildHeroFeaturedCard(context, heroDesign),
                         ],
                       ),
                     ),
                   ),
+                  const SliverToBoxAdapter(child: SizedBox(height: 24)),
                 ],
 
-                const SliverToBoxAdapter(child: SizedBox(height: 32)),
+                // Product Catalog Grid
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'CATALOG DESIGNS (${filteredDesigns.length})',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.mutedText,
+                            letterSpacing: 1.1,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                    ),
+                  ),
+                ),
+
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  sliver: SliverGrid(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 16,
+                      crossAxisSpacing: 14,
+                      childAspectRatio: 0.72,
+                    ),
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        return _buildGridProductCard(
+                          context,
+                          filteredDesigns[index],
+                        );
+                      },
+                      childCount: filteredDesigns.length,
+                    ),
+                  ),
+                ),
               ],
+
+              const SliverToBoxAdapter(child: SizedBox(height: 28)),
+
+              // ── 5. Studio Information Card ────────────────────────
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: StoreInfoCard(boutique: boutique),
+                ),
+              ),
+
+              const SliverToBoxAdapter(child: SizedBox(height: 32)),
             ],
           ),
         ),
@@ -411,134 +487,99 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage> {
     );
   }
 
-  // ── Category Filter Chip ─────────────────────────────────────
-  Widget _buildCategoryChip({
+  // ── Category Pill Widget ──────────────────────────────────────────────
+  Widget _buildCategoryPill({
     required String label,
     required String slug,
     required bool isSelected,
   }) {
-    return Container(
-      margin: const EdgeInsets.only(right: 8),
-      child: FilterChip(
-        selected: isSelected,
-        showCheckmark: false,
-        label: Text(label),
-        labelStyle: GoogleFonts.montserrat(
-          fontSize: 11,
-          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-          color: isSelected ? const Color(0xFF1B5E20) : AppColors.charcoal,
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: GestureDetector(
+        onTap: () => setState(() => _selectedCategorySlug = slug),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.brandGreen800 : AppColors.surfaceWhite,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected ? AppColors.brandGreen800 : AppColors.borderSoft,
+            ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: AppColors.brandGreen800.withValues(alpha: 0.2),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : [],
+          ),
+          child: Text(
+            label,
+            style: GoogleFonts.montserrat(
+              fontSize: 12,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              color: isSelected ? Colors.white : AppColors.charcoal,
+            ),
+          ),
         ),
-        backgroundColor: AppColors.surfaceWhite,
-        selectedColor: const Color(0xFF2E7D32).withValues(alpha: 0.2),
-        side: BorderSide(
-          color: isSelected
-              ? const Color(0xFF2E7D32).withValues(alpha: 0.5)
-              : AppColors.borderSoft,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        onSelected: (selected) {
-          setState(() {
-            _selectedCategorySlug = slug;
-          });
-        },
       ),
     );
   }
 
-  // ── Section Header Helper ────────────────────────────────────
-  Widget _buildSectionHeader({
-    required String title,
-    required VoidCallback onViewAll,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: GoogleFonts.montserrat(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            color: AppColors.charcoal,
-            letterSpacing: 1.3,
-          ),
-        ),
-        GestureDetector(
-          onTap: onViewAll,
-          child: Row(
-            children: [
-              Text(
-                'View all',
-                style: GoogleFonts.montserrat(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.mutedText,
-                ),
-              ),
-              const SizedBox(width: 2),
-              const Icon(
-                Icons.chevron_right_rounded,
-                size: 16,
-                color: AppColors.mutedText,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ── Hero Banner Card ─────────────────────────────────────────
-  Widget _buildHeroCard(BuildContext context, DesignModel design) {
+  // ── Hero Featured Card Widget ──────────────────────────────────────────
+  Widget _buildHeroFeaturedCard(BuildContext context, DesignModel design) {
     final title = design.name;
     final price = '₹${design.price.toInt()}';
     final hasImg = design.imageUrls.isNotEmpty;
     final imgUrl = hasImg ? design.imageUrls.first : '';
-    final isFav = ref.watch(isDesignFavoritedProvider(design.id));
 
     return GestureDetector(
       onTap: () => context.push(AppRoutes.customerDesignDetails, extra: design),
       child: Container(
-        height: 210,
+        height: 200,
         decoration: BoxDecoration(
-          color: const Color(0xFF2E7D32).withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 12,
-              offset: const Offset(0, 3),
-            ),
-          ],
+          color: const Color(0xFF1B5E20).withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppColors.borderSoft),
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(18),
           child: Stack(
             children: [
-              // Background Image
               Positioned.fill(
                 child: hasImg && imgUrl.startsWith('http')
                     ? Image.network(
                         imgUrl,
                         fit: BoxFit.cover,
                         errorBuilder: (ctx, err, stack) => Container(
-                          color: const Color(0xFF2E7D32).withValues(alpha: 0.2),
+                          color: AppColors.brandGreen800.withValues(alpha: 0.1),
+                          child: const Icon(
+                            Icons.checkroom_rounded,
+                            color: AppColors.mutedText,
+                            size: 40,
+                          ),
                         ),
                       )
                     : Container(
-                        color: const Color(0xFF2E7D32).withValues(alpha: 0.2),
+                        color: AppColors.brandGreen800.withValues(alpha: 0.1),
+                        child: const Icon(
+                          Icons.checkroom_rounded,
+                          color: AppColors.mutedText,
+                          size: 40,
+                        ),
                       ),
               ),
-
-              // Gradient Overlay
               Positioned.fill(
                 child: Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
+                        Colors.black.withValues(alpha: 0.7),
                         Colors.transparent,
-                        Colors.black.withValues(alpha: 0.75),
+                        Colors.black.withValues(alpha: 0.8),
                       ],
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
@@ -546,68 +587,10 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage> {
                   ),
                 ),
               ),
-
-              // Top Left Badge with Green 0.2 Opacity
               Positioned(
-                top: 14,
-                left: 14,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2E7D32).withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.4),
-                    ),
-                  ),
-                  child: Text(
-                    'FEATURED LOOK',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                      letterSpacing: 1.0,
-                    ),
-                  ),
-                ),
-              ),
-
-              // Top Right Favorite Button
-              Positioned(
-                top: 12,
-                right: 12,
-                child: GestureDetector(
-                  onTap: () async {
-                    final success = await ref
-                        .read(favoriteMutationProvider.notifier)
-                        .toggleFavorite(design.id);
-                    if (!success && context.mounted) {
-                      await GoogleAuthBottomSheet.show(context);
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: const BoxDecoration(
-                      color: AppColors.surfaceWhite,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      isFav
-                          ? Icons.favorite_rounded
-                          : Icons.favorite_border_rounded,
-                      size: 16,
-                      color: isFav ? AppColors.error : AppColors.charcoal,
-                    ),
-                  ),
-                ),
-              ),
-
-              // Bottom Info
-              Positioned(
-                bottom: 14,
-                left: 14,
-                right: 14,
+                left: 16,
+                bottom: 16,
+                right: 16,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -615,13 +598,34 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage> {
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFC5A880),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              'FEATURED LOOK',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
                           Text(
                             title,
                             style: GoogleFonts.playfairDisplay(
                               fontSize: 18,
                               fontWeight: FontWeight.w700,
-                              color: AppColors.surfaceWhite,
+                              color: Colors.white,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -632,7 +636,7 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage> {
                             style: GoogleFonts.montserrat(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
-                              color: AppColors.surfaceWhite,
+                              color: const Color(0xFFC5A880),
                             ),
                           ),
                         ],
@@ -640,18 +644,18 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage> {
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
+                        horizontal: 10,
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF2E7D32).withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(16),
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.5),
+                          color: Colors.white.withValues(alpha: 0.3),
                         ),
                       ),
                       child: Text(
-                        'Explore →',
+                        'View →',
                         style: GoogleFonts.montserrat(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -669,118 +673,8 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage> {
     );
   }
 
-  // ── Clean Standard Product Card ──────────────────────────────
-  Widget _buildProductCard(BuildContext context, DesignModel design) {
-    final title = design.name;
-    final price = '₹${design.price.toInt()}';
-    final hasImg = design.imageUrls.isNotEmpty;
-    final imgUrl = hasImg ? design.imageUrls.first : '';
-    final isFav = ref.watch(isDesignFavoritedProvider(design.id));
-
-    return GestureDetector(
-      onTap: () => context.push(AppRoutes.customerDesignDetails, extra: design),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Image Box
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFF2E7D32).withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.borderSoft),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(14),
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: hasImg && imgUrl.startsWith('http')
-                          ? Image.network(
-                              imgUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (ctx, err, stack) => Container(
-                                color: const Color(0xFF2E7D32).withValues(alpha: 0.2),
-                                child: const Icon(
-                                  Icons.checkroom_rounded,
-                                  color: AppColors.mutedText,
-                                  size: 28,
-                                ),
-                              ),
-                            )
-                          : Container(
-                              color: const Color(0xFF2E7D32).withValues(alpha: 0.2),
-                              child: const Icon(
-                                Icons.checkroom_rounded,
-                                color: AppColors.mutedText,
-                                size: 28,
-                              ),
-                            ),
-                    ),
-
-                    // Favorite Button Top Right
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: GestureDetector(
-                        onTap: () async {
-                          final success = await ref
-                              .read(favoriteMutationProvider.notifier)
-                              .toggleFavorite(design.id);
-                          if (!success && context.mounted) {
-                            await GoogleAuthBottomSheet.show(context);
-                          }
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: AppColors.surfaceWhite.withValues(alpha: 0.9),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            isFav
-                                ? Icons.favorite_rounded
-                                : Icons.favorite_border_rounded,
-                            size: 14,
-                            color: isFav ? AppColors.error : AppColors.charcoal,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-
-          // Title & Price
-          Text(
-            title,
-            style: GoogleFonts.playfairDisplay(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: AppColors.charcoal,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 2),
-          Text(
-            price,
-            style: GoogleFonts.montserrat(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: AppColors.charcoal,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Clean Horizontal Product List Tile ───────────────────────
-  Widget _buildHorizontalProductTile(BuildContext context, DesignModel design) {
+  // ── Grid Product Card Widget ──────────────────────────────────────────
+  Widget _buildGridProductCard(BuildContext context, DesignModel design) {
     final title = design.name;
     final price = '₹${design.price.toInt()}';
     final hasImg = design.imageUrls.isNotEmpty;
@@ -790,114 +684,122 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage> {
     return GestureDetector(
       onTap: () => context.push(AppRoutes.customerDesignDetails, extra: design),
       child: Container(
-        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: AppColors.surfaceWhite,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.borderSoft),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
+              color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 8,
-              offset: const Offset(0, 2),
+              offset: const Offset(0, 3),
             ),
           ],
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Thumbnail Image Box with 0.2 Green Opacity
-            Container(
-              width: 84,
-              height: 84,
-              decoration: BoxDecoration(
-                color: const Color(0xFF2E7D32).withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: hasImg && imgUrl.startsWith('http')
-                  ? Image.network(
-                      imgUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (ctx, err, stack) => const Center(
-                        child: Icon(
-                          Icons.checkroom_rounded,
-                          color: AppColors.mutedText,
-                          size: 28,
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.brandGreen800.withValues(alpha: 0.06),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(16),
+                  ),
+                ),
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(16),
+                  ),
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: hasImg && imgUrl.startsWith('http')
+                            ? Image.network(
+                                imgUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder: (ctx, err, stack) => Container(
+                                  color: AppColors.brandGreen800.withValues(
+                                    alpha: 0.08,
+                                  ),
+                                  child: const Icon(
+                                    Icons.checkroom_rounded,
+                                    color: AppColors.mutedText,
+                                    size: 28,
+                                  ),
+                                ),
+                              )
+                            : Container(
+                                color: AppColors.brandGreen800.withValues(
+                                  alpha: 0.08,
+                                ),
+                                child: const Icon(
+                                  Icons.checkroom_rounded,
+                                  color: AppColors.mutedText,
+                                  size: 28,
+                                ),
+                              ),
+                      ),
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: GestureDetector(
+                          onTap: () async {
+                            final success = await ref
+                                .read(favoriteMutationProvider.notifier)
+                                .toggleFavorite(design.id);
+                            if (!success && context.mounted) {
+                              await GoogleAuthBottomSheet.show(context);
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceWhite.withValues(
+                                alpha: 0.9,
+                              ),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              isFav
+                                  ? Icons.favorite_rounded
+                                  : Icons.favorite_border_rounded,
+                              size: 14,
+                              color: isFav ? AppColors.error : AppColors.charcoal,
+                            ),
+                          ),
                         ),
                       ),
-                    )
-                  : const Center(
-                      child: Icon(
-                        Icons.checkroom_rounded,
-                        color: AppColors.mutedText,
-                        size: 28,
-                      ),
-                    ),
+                    ],
+                  ),
+                ),
+              ),
             ),
-            const SizedBox(width: 14),
-
-            // Details
-            Expanded(
+            Padding(
+              padding: const EdgeInsets.all(10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
                     style: GoogleFonts.playfairDisplay(
-                      fontSize: 16,
+                      fontSize: 13.5,
                       fontWeight: FontWeight.w700,
                       color: AppColors.charcoal,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
-                  if (design.tags.isNotEmpty)
-                    Text(
-                      design.tags.first.toUpperCase(),
-                      style: GoogleFonts.montserrat(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.mutedText,
-                      ),
-                    ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 2),
                   Text(
                     price,
                     style: GoogleFonts.montserrat(
-                      fontSize: 14,
+                      fontSize: 12.5,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.charcoal,
+                      color: AppColors.brandGreen800,
                     ),
                   ),
                 ],
-              ),
-            ),
-            const SizedBox(width: 8),
-
-            // Favorite Button
-            GestureDetector(
-              onTap: () async {
-                final success = await ref
-                    .read(favoriteMutationProvider.notifier)
-                    .toggleFavorite(design.id);
-                if (!success && context.mounted) {
-                  await GoogleAuthBottomSheet.show(context);
-                }
-              },
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: const BoxDecoration(
-                  color: AppColors.warmIvory,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  isFav
-                      ? Icons.favorite_rounded
-                      : Icons.favorite_border_rounded,
-                  size: 18,
-                  color: isFav ? AppColors.error : AppColors.mutedText,
-                ),
               ),
             ),
           ],
