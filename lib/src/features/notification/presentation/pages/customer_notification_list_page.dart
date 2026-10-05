@@ -221,9 +221,12 @@ class _NotificationCard extends StatelessWidget {
   IconData _iconForType(NotificationType type) {
     return switch (type) {
       NotificationType.general => Icons.notifications_none_rounded,
-      NotificationType.stitchingUpdate => Icons.design_services_rounded,
+      NotificationType.stitchingUpdate ||
+      NotificationType.stitchingStatusUpdated =>
+        Icons.design_services_rounded,
       NotificationType.designUpdate => Icons.checkroom_rounded,
       NotificationType.boutiqueAnnouncement => Icons.campaign_rounded,
+      NotificationType.newStitchingRequest => Icons.mark_email_unread_rounded,
     };
   }
 

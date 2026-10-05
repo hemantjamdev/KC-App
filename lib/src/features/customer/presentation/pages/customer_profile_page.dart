@@ -16,6 +16,7 @@ import '../../../notification/application/providers/notification_providers.dart'
 import '../../../stitching/application/providers/stitching_providers.dart';
 import '../../application/providers/customer_providers.dart';
 import '../widgets/active_stitching_preview_card.dart';
+import '../widgets/customer_profile_edit_sheet.dart';
 import '../widgets/profile_header_avatar.dart';
 
 /// Ultra-Luxury Kapada Creation Customer Profile Page.
@@ -117,7 +118,7 @@ class _CustomerProfilePageState extends ConsumerState<CustomerProfilePage> {
             // ── 1. Top Title Header ────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                padding: const EdgeInsets.fromLTRB(12, 20, 12, 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -145,23 +146,26 @@ class _CustomerProfilePageState extends ConsumerState<CustomerProfilePage> {
             // ── 2. Profile Avatar Header Card ────────────────
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: ProfileHeaderAvatar(
                   displayName: displayName,
                   photoUrl: photoUrl,
+                  phone: customerProfile?.phone ?? user?.phoneNumber,
+                  email: customerProfile?.email ?? user?.email,
+                  createdAt: customerProfile?.createdAt,
                   isAuthenticated: isAuthenticated,
                   onEditPressed: () =>
-                      context.push(AppRoutes.customerProfileEdit),
+                      CustomerProfileEditSheet.show(context),
                 ),
               ),
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 20)),
+            const SliverToBoxAdapter(child: SizedBox(height: 12)),
 
             // ── 3. Executive Stitched Menu Items Stack ─────────────────
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Column(
                   children: [
                     // Item 1: My Stitching

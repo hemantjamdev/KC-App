@@ -135,7 +135,14 @@ final notificationListProvider = StreamProvider<List<NotificationModel>>((ref) {
       .watchCustomerNotifications(customerUid: user?.uid);
 });
 
+final customerReadNotificationIdsProvider = StreamProvider<Set<String>>((ref) {
+  final user = ref.watch(currentCustomerUserProvider);
+  if (user == null || user.uid.isEmpty) return Stream.value(<String>{});
+  return ref.watch(notificationRepositoryProvider).watchReadNotificationIds(user.uid);
+});
+
 final unreadNotificationCountProvider = Provider<int>((ref) {
   final list = ref.watch(notificationListProvider).valueOrNull ?? [];
-  return list.where((n) => n.status == NotificationStatus.published).length;
+  final readIds = ref.watch(customerReadNotificationIdsProvider).valueOrNull ?? {};
+  return list.where((n) => !readIds.contains(n.id)).length;
 });

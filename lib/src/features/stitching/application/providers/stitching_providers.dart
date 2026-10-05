@@ -140,6 +140,7 @@ class StitchingSubmissionNotifier extends Notifier<StitchingSubmissionState> {
     required String? title,
     required String? category,
     required String phone,
+    String? notes,
   }) async {
     final user = ref.read(currentCustomerUserProvider);
     if (user == null) {
@@ -178,6 +179,16 @@ class StitchingSubmissionNotifier extends Notifier<StitchingSubmissionState> {
       return false;
     }
 
+    final trimmedNotes = notes?.trim();
+    if (trimmedNotes != null && trimmedNotes.length > 200) {
+      state = const StitchingSubmissionState.failure(
+        AppFailure.validation(
+          message: 'Stitching note cannot exceed 200 characters.',
+        ),
+      );
+      return false;
+    }
+
     state = const StitchingSubmissionState.submitting();
 
     try {
@@ -200,6 +211,11 @@ class StitchingSubmissionNotifier extends Notifier<StitchingSubmissionState> {
           'KC-ST-${now.millisecondsSinceEpoch.toString().substring(7)}';
 
       final garmentName = '$trimmedTitle ($category)';
+      final sanitizedNotes = (trimmedNotes != null && trimmedNotes.isNotEmpty)
+          ? (trimmedNotes.length > 200
+              ? trimmedNotes.substring(0, 200)
+              : trimmedNotes)
+          : null;
 
       final newOrder = StitchingOrderModel(
         id: orderId,
@@ -211,6 +227,7 @@ class StitchingSubmissionNotifier extends Notifier<StitchingSubmissionState> {
         designReferences: [
           DesignReferenceModel(designName: garmentName, quantity: 1),
         ],
+        notes: sanitizedNotes,
         createdAt: now,
         updatedAt: now,
         createdBy: user.uid,

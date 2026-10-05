@@ -33,6 +33,7 @@ class _StitchingRequestBottomSheetState
     extends ConsumerState<StitchingRequestBottomSheet> {
   final _titleController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _notesController = TextEditingController();
   final _titleFocusNode = FocusNode();
   final _phoneFocusNode = FocusNode();
   String? _selectedCategory;
@@ -65,6 +66,7 @@ class _StitchingRequestBottomSheetState
     _phoneFocusNode.dispose();
     _titleController.dispose();
     _phoneController.dispose();
+    _notesController.dispose();
     super.dispose();
   }
 
@@ -75,6 +77,7 @@ class _StitchingRequestBottomSheetState
           title: _titleController.text,
           category: _selectedCategory,
           phone: _phoneController.text,
+          notes: _notesController.text,
         );
 
     if (success && mounted) {
@@ -232,6 +235,20 @@ class _StitchingRequestBottomSheetState
               decoration: const InputDecoration(
                 labelText: 'Contact Phone Number *',
                 hintText: 'e.g. +91 98765 43210',
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            TextFormField(
+              controller: _notesController,
+              maxLength: 200,
+              maxLines: 3,
+              enabled: !isSubmitting,
+              style: GoogleFonts.montserrat(fontSize: 14),
+              decoration: const InputDecoration(
+                labelText: 'Stitching Notes (Optional)',
+                hintText: 'Special instructions, preferences...',
               ),
             ),
 

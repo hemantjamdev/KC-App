@@ -76,37 +76,6 @@ class StitchingOrderFirestoreRepository {
       'changedBy': createdBy,
     });
 
-    // Store notification in Firestore
-    final notificationId = 'notif_${order.id}';
-    final notificationRef = _firestore
-        .collection(FirestorePaths.notifications)
-        .doc(notificationId);
-
-    final customerName = (order.customerName != null && order.customerName!.isNotEmpty)
-        ? order.customerName!
-        : 'Customer';
-    final requestName = order.requestName.isNotEmpty
-        ? order.requestName
-        : 'Custom Stitching Request';
-
-    batch.set(notificationRef, {
-      'id': notificationId,
-      'boutiqueId': order.boutiqueId,
-      'branchId': order.branchId,
-      'title': 'New stitching order from $customerName',
-      'body': '$requestName (${order.orderNumber.isNotEmpty ? order.orderNumber : "Details"})',
-      'type': 'stitchingUpdate',
-      'audienceType': 'selectedCustomers',
-      'customerIds': [order.customerId],
-      'relatedEntityType': 'stitchingOrder',
-      'relatedEntityId': order.id,
-      'status': 'published',
-      'publishedAt': FieldValue.serverTimestamp(),
-      'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-      'createdBy': createdBy,
-    });
-
     await batch.commit();
   }
 

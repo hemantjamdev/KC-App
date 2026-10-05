@@ -143,16 +143,25 @@ class StoreInfoCard extends StatelessWidget {
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: const Color(0xFF162D20), // Deep luxury boutique forest green
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF244633), // Specular emerald sheen
+                Color(0xFF162D20), // Executive forest green base
+                Color(0xFF0D1C13), // Rich leather shadow depth
+              ],
+              stops: [0.0, 0.55, 1.0],
+            ),
             borderRadius: BorderRadius.circular(22),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.28),
+                color: Colors.black.withValues(alpha: 0.35),
                 blurRadius: 18,
                 offset: const Offset(0, 8),
               ),
               BoxShadow(
-                color: const Color(0xFF0F1E15).withValues(alpha: 0.4),
+                color: const Color(0xFF0F1E15).withValues(alpha: 0.5),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -863,64 +872,78 @@ Widget _buildDayScheduleRow(String day, String timeRange, bool isToday, {bool is
   );
 }
 
-/// CustomPainter generating natural green leather grain, micro-creases & pores.
+/// CustomPainter generating natural green leather grain, micro-creases & 3D embossed pores.
 class _LeatherGrainTexturePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    // 1. Organic micro-crease lines
-    final creasePaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.05)
-      ..strokeWidth = 1.0
+    final rect = Offset.zero & size;
+
+    // 1. Organic Vignette Inner Shadow around leather perimeter
+    final vignettePaint = Paint()
+      ..shader = RadialGradient(
+        center: Alignment.center,
+        radius: 0.85,
+        colors: [
+          Colors.transparent,
+          Colors.black.withValues(alpha: 0.38),
+        ],
+        stops: const [0.65, 1.0],
+      ).createShader(rect);
+    canvas.drawRect(rect, vignettePaint);
+
+    // 2. High-Contrast Organic Micro-Creases (Wrinkle Lines)
+    final creaseShadowPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.25)
+      ..strokeWidth = 1.2
       ..style = PaintingStyle.stroke;
 
-    final lightCreasePaint = Paint()
-      ..color = const Color(0xFF3A5845).withValues(alpha: 0.25)
-      ..strokeWidth = 0.8
+    final creaseHighlightPaint = Paint()
+      ..color = const Color(0xFF5A8B6D).withValues(alpha: 0.38)
+      ..strokeWidth = 0.9
       ..style = PaintingStyle.stroke;
 
     final path = Path();
-    for (double y = 10; y < size.height; y += 18) {
+    for (double y = 8; y < size.height; y += 14) {
       path.reset();
       path.moveTo(0, y);
-      for (double x = 0; x < size.width; x += 25) {
-        final seed = (x * 17 + y * 31).toInt();
+      for (double x = 0; x < size.width; x += 20) {
+        final seed = (x * 19 + y * 37).toInt();
         final dy = (seed % 7) - 3.5;
         path.quadraticBezierTo(
-          x + 12.5,
+          x + 10,
           y + dy,
-          x + 25,
+          x + 20,
           y + (seed % 5 - 2.5),
         );
       }
-      canvas.drawPath(path, creasePaint);
-      canvas.drawPath(path.shift(const Offset(0.5, 0.5)), lightCreasePaint);
+      canvas.drawPath(path, creaseShadowPaint);
+      canvas.drawPath(path.shift(const Offset(0.7, 0.8)), creaseHighlightPaint);
     }
 
-    // 2. Multi-scale pebble pores
+    // 3. Dense 3D Embossed Pebble Pores & Leather Stipples
     final darkPorePaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.08)
+      ..color = Colors.black.withValues(alpha: 0.32)
       ..style = PaintingStyle.fill;
 
     final highlightPorePaint = Paint()
-      ..color = const Color(0xFF4A6B56).withValues(alpha: 0.22)
+      ..color = const Color(0xFF6DA583).withValues(alpha: 0.42)
       ..style = PaintingStyle.fill;
 
-    for (double x = 6; x < size.width; x += 14) {
-      for (double y = 6; y < size.height; y += 14) {
-        final seed = (x * 37 + y * 53).toInt();
-        if (seed % 4 == 0) {
-          final r = (seed % 3 == 0) ? 1.2 : 0.8;
+    for (double x = 4; x < size.width; x += 9) {
+      for (double y = 4; y < size.height; y += 9) {
+        final seed = (x * 41 + y * 67).toInt();
+        if (seed % 3 == 0) {
+          final r = (seed % 5 == 0) ? 1.4 : 0.9;
           final offsetX = (seed % 5) - 2.5;
-          final offsetY = ((seed * 13) % 5) - 2.5;
+          final offsetY = ((seed * 17) % 5) - 2.5;
 
+          final center = Offset(x + offsetX, y + offsetY);
+          // Dark pore shadow
+          canvas.drawCircle(center, r, darkPorePaint);
+          // Top-left specular sheen highlight
           canvas.drawCircle(
-            Offset(x + offsetX, y + offsetY),
-            r,
-            darkPorePaint,
-          );
-          canvas.drawCircle(
-            Offset(x + offsetX - 0.4, y + offsetY - 0.4),
-            r * 0.7,
+            center + const Offset(-0.5, -0.5),
+            r * 0.65,
             highlightPorePaint,
           );
         }

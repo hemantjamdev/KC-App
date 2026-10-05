@@ -12,6 +12,9 @@ import '../../../auth/presentation/widgets/google_auth_bottom_sheet.dart';
 import '../../../notification/application/providers/notification_providers.dart';
 import '../../../notification/domain/models/notification_permission_state.dart';
 
+import '../../../notification/presentation/services/notification_router.dart';
+import '../../../notification/domain/models/notification_payload_model.dart';
+
 /// Persistent 4-tab bottom navigation shell for Kapada Creation Customer App.
 /// Primary destinations: Home, Favorites, My Stitching, Profile.
 class CustomerShellPage extends ConsumerStatefulWidget {
@@ -58,6 +61,22 @@ class _CustomerShellPageState extends ConsumerState<CustomerShellPage> {
         ref.read(firebaseMessagingServiceProvider).initialize(
               customerId: currentUserId,
               firebaseUid: user?.uid,
+              onTapHandler: (notifId, payloadMap) {
+                if (!mounted) return;
+                final route = payloadMap['route'] as String? ??
+                    payloadMap['relatedEntityType'] as String? ??
+                    'home';
+                final targetId = payloadMap['targetId'] as String? ??
+                    payloadMap['relatedEntityId'] as String?;
+                final payload = NotificationPayloadModel(
+                  notificationId: notifId,
+                  type: payloadMap['type'] as String? ?? 'general',
+                  route: route,
+                  targetId: targetId,
+                  rawData: payloadMap,
+                );
+                NotificationRouter.handleNotificationTap(context, payload);
+              },
             );
       });
     }

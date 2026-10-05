@@ -189,27 +189,36 @@ class CustomerNotificationCard extends StatelessWidget {
   Color _badgeBgColor(NotificationType type) {
     return switch (type) {
       NotificationType.general => AppColors.brandGreen50,
-      NotificationType.stitchingUpdate => const Color(0xFFFBF4E8),
+      NotificationType.stitchingUpdate ||
+      NotificationType.stitchingStatusUpdated =>
+        const Color(0xFFFBF4E8),
       NotificationType.designUpdate => AppColors.brandGreen50,
       NotificationType.boutiqueAnnouncement => const Color(0xFFFDF0ED),
+      NotificationType.newStitchingRequest => const Color(0xFFFEF3C7),
     };
   }
 
   Color _badgeIconColor(NotificationType type) {
     return switch (type) {
       NotificationType.general => AppColors.brandGreen800,
-      NotificationType.stitchingUpdate => AppColors.goldBronze,
+      NotificationType.stitchingUpdate ||
+      NotificationType.stitchingStatusUpdated =>
+        AppColors.goldBronze,
       NotificationType.designUpdate => AppColors.brandGreen800,
       NotificationType.boutiqueAnnouncement => AppColors.error,
+      NotificationType.newStitchingRequest => const Color(0xFFD97706),
     };
   }
 
   IconData _iconForType(NotificationType type) {
     return switch (type) {
       NotificationType.general => Icons.notifications_active_rounded,
-      NotificationType.stitchingUpdate => Icons.design_services_rounded,
+      NotificationType.stitchingUpdate ||
+      NotificationType.stitchingStatusUpdated =>
+        Icons.design_services_rounded,
       NotificationType.designUpdate => Icons.checkroom_rounded,
       NotificationType.boutiqueAnnouncement => Icons.campaign_rounded,
+      NotificationType.newStitchingRequest => Icons.mark_email_unread_rounded,
     };
   }
 }

@@ -89,6 +89,9 @@ class NotificationController extends ChangeNotifier {
 
       case NotificationAudienceType.selectedCustomers:
         return notif.customerIds.contains(customerId);
+
+      case NotificationAudienceType.admins:
+        return false;
     }
   }
 
