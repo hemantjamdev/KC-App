@@ -125,7 +125,7 @@ class _InstagramTrendingCardState
     final imgUrl = item.imageUrls.isNotEmpty
         ? item.imageUrls.first
         : (item.thumbnailUrl ?? '');
-    final price = item.price > 0 ? '₹${item.price.toStringAsFixed(0)}' : 'Bespoke';
+    final price = item.price > 0 ? '₹${item.price.toStringAsFixed(0)}' : 'Custom';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
@@ -183,7 +183,7 @@ class _InstagramTrendingCardState
                         ),
                       ),
                       Text(
-                        'Bespoke Atelier  •  Rank #${widget.rankIndex + 1}',
+                        'Designer Atelier  •  Rank #${widget.rankIndex + 1}',
                         style: GoogleFonts.montserrat(
                           fontSize: 10,
                           fontWeight: FontWeight.w500,

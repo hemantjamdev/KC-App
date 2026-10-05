@@ -8,6 +8,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../stitching/domain/models/stitching_order_model.dart';
 import '../../../stitching/presentation/widgets/stitching_request_bottom_sheet.dart';
 
+import '../../../../core/widgets/stitch_divider.dart';
+
 /// Modular Active Stitching Order Preview Card for Profile Page.
 class ActiveStitchingPreviewCard extends StatelessWidget {
   const ActiveStitchingPreviewCard({super.key, this.activeOrder});
@@ -16,23 +18,14 @@ class ActiveStitchingPreviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceWhite,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.3),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+    return DashedStitchContainer(
+      backgroundColor: const Color(0xFFFAF6EF),
+      borderColor: const Color(0xFFC5A880),
+      borderRadius: 20,
+      inset: 4.0,
+      dashWidth: 6.5,
+      dashGap: 3.5,
+      padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

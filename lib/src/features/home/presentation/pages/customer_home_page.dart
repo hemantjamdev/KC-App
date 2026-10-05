@@ -148,21 +148,8 @@ class CustomerHomePage extends ConsumerWidget {
                   const SliverToBoxAdapter(child: SizedBox(height: 28)),
                 ],
 
-                // 3. FESTIVAL Section (Real Category)
+                // 3. FESTIVAL Section (The Festive Edit)
                 if (hasRealCategories && festiveCat != null) ...[
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: SectionHeaderRow(
-                        title: festiveCat.name.toUpperCase(),
-                        onViewAll: () => context.push(
-                          AppRoutes.customerCategoryDesigns,
-                          extra: festiveCat,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 14)),
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -209,7 +196,6 @@ class CustomerHomePage extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 14)),
                   SliverToBoxAdapter(
                     child: CustomCategoriesGrid(categories: categories),
                   ),

@@ -52,7 +52,7 @@ class ProfileHeaderAvatar extends StatelessWidget {
                     ),
                     const SizedBox(width: 5),
                     Text(
-                      isAuthenticated ? 'BESPOKE MEMBER' : 'STUDIO GUEST',
+                      isAuthenticated ? 'VIP MEMBER' : 'STUDIO GUEST',
                       style: GoogleFonts.montserrat(
                         fontSize: 9.5,
                         fontWeight: FontWeight.w800,

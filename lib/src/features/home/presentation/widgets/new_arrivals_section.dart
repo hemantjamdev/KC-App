@@ -46,7 +46,7 @@ class _NewArrivalCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final title = design.name;
-    final price = design.price > 0 ? '₹${design.price.toStringAsFixed(0)}' : 'Bespoke';
+    final price = design.price > 0 ? '₹${design.price.toStringAsFixed(0)}' : 'Custom';
     final imgUrl = design.imageUrls.isNotEmpty
         ? design.imageUrls.first
         : (design.thumbnailUrl ?? '');

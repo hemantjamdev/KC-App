@@ -243,7 +243,7 @@ class _ProductCardState extends ConsumerState<ProductCard> {
                         )
                       else
                         Text(
-                          'Bespoke',
+                          'Custom',
                           style: GoogleFonts.playfairDisplay(
                             fontSize: 13,
                             fontStyle: FontStyle.italic,

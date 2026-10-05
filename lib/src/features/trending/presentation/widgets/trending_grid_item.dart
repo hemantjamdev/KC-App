@@ -82,7 +82,7 @@ class _TrendingGridItemState extends ConsumerState<TrendingGridItem> {
     final imgUrl = item.imageUrls.isNotEmpty
         ? item.imageUrls.first
         : (item.thumbnailUrl ?? '');
-    final price = item.price > 0 ? '₹${item.price.toStringAsFixed(0)}' : 'Bespoke';
+    final price = item.price > 0 ? '₹${item.price.toStringAsFixed(0)}' : 'Custom';
 
     return GestureDetector(
       onTap: () {

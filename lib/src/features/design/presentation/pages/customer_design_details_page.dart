@@ -198,7 +198,7 @@ class CustomerDesignDetailsPage extends ConsumerWidget {
                               )
                             else
                               Text(
-                                'Bespoke Pricing in Studio',
+                                'Custom Pricing in Studio',
                                 style: GoogleFonts.playfairDisplay(
                                   fontSize: 16,
                                   fontStyle: FontStyle.italic,

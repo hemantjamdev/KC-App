@@ -21,7 +21,7 @@ class TrendingHeroCard extends ConsumerWidget {
 
     final item = design!;
     final title = item.name;
-    final price = item.price > 0 ? '₹${item.price.toStringAsFixed(0)}' : 'Bespoke';
+    final price = item.price > 0 ? '₹${item.price.toStringAsFixed(0)}' : 'Custom';
     final imgUrl = item.imageUrls.isNotEmpty
         ? item.imageUrls.first
         : (item.thumbnailUrl ?? '');
@@ -123,7 +123,7 @@ class TrendingHeroCard extends ConsumerWidget {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        item.shortDescription ?? 'Bespoke boutique collection.',
+                        item.shortDescription ?? 'Exclusive boutique collection.',
                         style: GoogleFonts.montserrat(
                           fontSize: 9.5,
                           color: AppColors.brandGreen100,

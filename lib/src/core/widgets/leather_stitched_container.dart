@@ -11,7 +11,7 @@ class LeatherStitchedContainer extends StatelessWidget {
     this.padding = const EdgeInsets.all(20),
     this.margin,
     this.borderRadius = 22.0,
-    this.stitchColor = AppColors.surfaceWhite,
+    this.stitchColor = AppColors.goldAccent,
   });
 
   final Widget child;
@@ -27,24 +27,24 @@ class LeatherStitchedContainer extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(borderRadius),
         gradient: const RadialGradient(
-          center: Alignment(-0.4, -0.6),
-          radius: 1.3,
+          center: Alignment(-0.35, -0.45),
+          radius: 1.35,
           colors: [
-            Color(0xFF234734), // Soft top-left light catch on leather
-            Color(0xFF162D20), // Deep emerald leather body
-            Color(0xFF0C1912), // Deep dark leather shadow edge
+            Color(0xFF1E4834), // Soft top-left ambient light sheen on leather hide
+            Color(0xFF133223), // Rich deep emerald leather body
+            Color(0xFF0B1F16), // Dark leather edge shadow
           ],
-          stops: [0.0, 0.6, 1.0],
+          stops: [0.0, 0.55, 1.0],
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.28),
+            color: Colors.black.withValues(alpha: 0.32),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
           BoxShadow(
-            color: const Color(0xFFC5A880).withValues(alpha: 0.18),
-            blurRadius: 1.5,
+            color: const Color(0xFFC5A880).withValues(alpha: 0.20),
+            blurRadius: 2.0,
             spreadRadius: 0.5,
           ),
         ],
@@ -69,7 +69,7 @@ class LeatherStitchedContainer extends StatelessWidget {
   }
 }
 
-/// CustomPainter drawing authentic leather pebble grain texture & 3D bevel edges.
+/// CustomPainter drawing hyper-realistic natural leather hide texture & 3D bevel edges.
 class _LeatherGrainTexturePainter extends CustomPainter {
   _LeatherGrainTexturePainter({required this.borderRadius});
 
@@ -79,53 +79,68 @@ class _LeatherGrainTexturePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
 
-    // 1. Draw subtle diagonal leather grain lines
-    final grainLinePaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.04)
-      ..strokeWidth = 1.0
+    // 1. Organic Curved Leather Micro-Creases & Wrinkles
+    final creaseDarkPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.05)
+      ..strokeWidth = 0.9
       ..style = PaintingStyle.stroke;
 
-    for (double i = -size.height; i < size.width + size.height; i += 12) {
-      canvas.drawLine(
-        Offset(i, 0),
-        Offset(i + size.height, size.height),
-        grainLinePaint,
-      );
+    final creaseLightPaint = Paint()
+      ..color = const Color(0xFF3C7B5B).withValues(alpha: 0.08)
+      ..strokeWidth = 0.9
+      ..style = PaintingStyle.stroke;
+
+    // Natural curved micro-crease paths across hide
+    for (double y = 10; y < size.height; y += 18) {
+      final Path path = Path();
+      path.moveTo(0, y);
+      for (double x = 0; x < size.width; x += 32) {
+        final seed = ((x * 13) + (y * 29)).toInt();
+        final controlY = y + ((seed % 7) - 3.5);
+        final endX = math.min(x + 32, size.width);
+        path.quadraticBezierTo(x + 16, controlY, endX, y + ((seed % 5) - 2.5));
+      }
+      canvas.drawPath(path, creaseDarkPaint);
+      canvas.drawPath(path.shift(const Offset(0.5, 0.5)), creaseLightPaint);
     }
 
-    // 2. Draw organic pebble grain dots
-    final dotPaintLight = Paint()
-      ..color = const Color(0xFF38684D).withValues(alpha: 0.09)
+    // 2. Multi-Scale Natural Pebble Grain Pores & Cell Structure
+    final poreDarkPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.12)
       ..style = PaintingStyle.fill;
 
-    final dotPaintDark = Paint()
-      ..color = Colors.black.withValues(alpha: 0.08)
+    final poreHighlightPaint = Paint()
+      ..color = const Color(0xFF3C7B5B).withValues(alpha: 0.14)
       ..style = PaintingStyle.fill;
 
-    // Deterministic pseudo-random seed grid
-    for (double x = 8; x < size.width; x += 14) {
-      for (double y = 8; y < size.height; y += 14) {
-        final seed = (x * 31 + y * 17).toInt();
+    for (double x = 5; x < size.width; x += 9) {
+      for (double y = 5; y < size.height; y += 9) {
+        final seed = (x * 37 + y * 19).toInt();
         final offsetX = (seed % 7) - 3.5;
-        final offsetY = ((seed * 13) % 7) - 3.5;
-        final radius = 1.0 + ((seed % 3) * 0.4);
+        final offsetY = ((seed * 17) % 7) - 3.5;
+        final radius = 0.7 + ((seed % 3) * 0.45);
+
+        final Offset center = Offset(
+          (x + offsetX).clamp(0, size.width),
+          (y + offsetY).clamp(0, size.height),
+        );
 
         if (seed % 2 == 0) {
-          canvas.drawCircle(Offset(x + offsetX, y + offsetY), radius, dotPaintDark);
+          canvas.drawCircle(center, radius, poreDarkPaint);
         } else {
-          canvas.drawCircle(Offset(x + offsetX, y + offsetY), radius, dotPaintLight);
+          canvas.drawCircle(center + const Offset(0.4, 0.4), radius * 0.8, poreHighlightPaint);
         }
       }
     }
 
-    // 3. Draw 3D embossed leather cut bevel frame
+    // 3. 3D Embossed Leather Cut Bevel Frame
     final highlightBevel = Paint()
-      ..color = const Color(0xFF427A5B).withValues(alpha: 0.25)
+      ..color = const Color(0xFF3C7B5B).withValues(alpha: 0.35)
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke;
 
     final shadowBevel = Paint()
-      ..color = Colors.black.withValues(alpha: 0.4)
+      ..color = Colors.black.withValues(alpha: 0.55)
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke;
 
