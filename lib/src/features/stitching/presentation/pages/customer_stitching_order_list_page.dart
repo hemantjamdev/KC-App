@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../app/app_routes.dart';
+
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_toast.dart';
 import '../../../../core/widgets/customer_empty_state.dart';
-import '../../../../core/widgets/stitching_status_badge.dart';
 import '../../../auth/application/providers/auth_providers.dart';
 import '../../../auth/presentation/widgets/google_auth_bottom_sheet.dart';
 import '../../application/providers/stitching_providers.dart';
-import '../../domain/models/stitching_order_model.dart';
+import '../widgets/stitching_order_card.dart';
 import '../widgets/stitching_request_bottom_sheet.dart';
 
 /// Customer "My Stitching" Tab Page.
@@ -134,7 +132,7 @@ class CustomerStitchingOrderListPage extends ConsumerWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
-                      (ctx, idx) => _StitchingOrderCard(order: orders[idx]),
+                      (ctx, idx) => StitchingOrderCard(order: orders[idx]),
                       childCount: orders.length,
                     ),
                   ),
@@ -144,108 +142,6 @@ class CustomerStitchingOrderListPage extends ConsumerWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _StitchingOrderCard extends StatelessWidget {
-  const _StitchingOrderCard({required this.order});
-
-  final StitchingOrderModel order;
-
-  @override
-  Widget build(BuildContext context) {
-    final titleName = order.designReferences.isNotEmpty
-        ? order.designReferences.first.designName
-        : 'Custom Stitching Request';
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceWhite,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderSoft),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                order.orderNumber,
-                style: GoogleFonts.montserrat(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.brandGreen900,
-                  letterSpacing: 0.5,
-                ),
-              ),
-              StitchingStatusBadge(status: order.status.name),
-            ],
-          ),
-          const SizedBox(height: 10),
-
-          Text(
-            titleName,
-            style: GoogleFonts.playfairDisplay(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: AppColors.charcoal,
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // Progress Fraction Bar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: order.status.progressFraction,
-              backgroundColor: AppColors.brandGreen50,
-              color: AppColors.brandGreen800,
-              minHeight: 6,
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Status: ${order.status.customerLabel}',
-                style: GoogleFonts.montserrat(
-                  fontSize: 12,
-                  color: AppColors.mutedText,
-                ),
-              ),
-              GestureDetector(
-                onTap: () => context.push(
-                  AppRoutes.customerStitchingDetails,
-                  extra: order,
-                ),
-                child: Row(
-                  children: [
-                    Text(
-                      'Details',
-                      style: GoogleFonts.montserrat(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.brandGreen800,
-                      ),
-                    ),
-                    const Icon(
-                      Icons.chevron_right_rounded,
-                      size: 16,
-                      color: AppColors.brandGreen800,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }

@@ -1,5 +1,7 @@
 import 'package:go_router/go_router.dart';
 
+import '../features/category/domain/models/category_model.dart';
+import '../features/category/presentation/pages/customer_category_designs_page.dart';
 import '../features/customer/presentation/pages/customer_profile_edit_page.dart';
 import '../features/customer/presentation/pages/customer_profile_page.dart';
 import '../features/design/domain/models/design_model.dart';
@@ -16,6 +18,7 @@ import '../features/section/presentation/pages/customer_section_listing_page.dar
 import '../features/stitching/domain/models/stitching_order_model.dart';
 import '../features/stitching/presentation/pages/customer_stitching_order_details_page.dart';
 import '../features/stitching/presentation/pages/customer_stitching_order_list_page.dart';
+import '../features/trending/presentation/pages/customer_trending_listing_page.dart';
 
 /// Centralized route paths and router configuration for KC-App.
 abstract class AppRoutes {
@@ -30,8 +33,9 @@ abstract class AppRoutes {
   static const String customerStitchingList = '/customer/stitching';
   static const String customerProfile = '/customer/profile';
 
-  // Section listing
+  // Section & Trending listing
   static const String customerSectionListing = '/customer/sections/listing';
+  static const String customerTrendingListing = '/customer/trending/listing';
 
   // Design details
   static const String customerDesignDetails = '/customer/designs/details';
@@ -52,7 +56,7 @@ abstract class AppRoutes {
   static const String customerSelectBoutique = customerHome;
   static const String customerSelectBranch = customerHome;
   static const String customerCategoryList = customerHome;
-  static const String customerCategoryDesigns = customerHome;
+  static const String customerCategoryDesigns = '/customer/category/designs';
   static const String customerAllDesigns = customerHome;
 }
 
@@ -101,6 +105,10 @@ final GoRouter appRouter = GoRouter(
       },
     ),
     GoRoute(
+      path: AppRoutes.customerTrendingListing,
+      builder: (context, state) => const CustomerTrendingListingPage(),
+    ),
+    GoRoute(
       path: AppRoutes.customerDesignDetails,
       builder: (context, state) =>
           CustomerDesignDetailsPage(design: state.extra as DesignModel),
@@ -123,6 +131,12 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.customerNotificationDetails,
       builder: (context, state) => CustomerNotificationDetailsPage(
         notification: state.extra as NotificationModel,
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.customerCategoryDesigns,
+      builder: (context, state) => CustomerCategoryDesignsPage(
+        category: state.extra as CategoryModel,
       ),
     ),
   ],

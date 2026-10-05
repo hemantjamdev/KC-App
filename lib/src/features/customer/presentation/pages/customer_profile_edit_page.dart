@@ -163,7 +163,7 @@ class _CustomerProfileEditPageState
                       style: GoogleFonts.montserrat(fontSize: 14),
                       decoration: const InputDecoration(
                         labelText: 'Customer Name *',
-                        hintText: 'e.g. Priya Sharma',
+                        hintText: 'Enter your full name',
                       ),
                       validator: (v) {
                         if (v == null || v.trim().isEmpty) {

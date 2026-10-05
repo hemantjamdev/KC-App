@@ -48,6 +48,7 @@ class CustomerFirestoreDataSource {
       updatedAt: updatedAt,
       createdBy: data['createdBy'] as String?,
       updatedBy: data['updatedBy'] as String?,
+      notificationsEnabled: data['notificationsEnabled'] as bool? ?? true,
     );
   }
 
@@ -67,6 +68,7 @@ class CustomerFirestoreDataSource {
       'branchIds': model.branchIds,
       'source': model.source.name,
       'isActive': model.isActive,
+      'notificationsEnabled': model.notificationsEnabled,
       'schemaVersion': 1,
       'createdBy': model.createdBy,
       'updatedBy': model.updatedBy,

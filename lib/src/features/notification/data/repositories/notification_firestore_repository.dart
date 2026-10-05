@@ -20,7 +20,7 @@ class NotificationFirestoreRepository {
               .map(_fromFirestore)
               .where((n) {
                 // Exclude Admin-only notifications
-                if (n.audienceType.name == 'admins') {
+                if (n.audienceType.name == 'admins' || n.audienceType.name == 'admin') {
                   return false;
                 }
                 if (n.expiresAt != null && n.expiresAt!.isBefore(now)) {
@@ -29,14 +29,29 @@ class NotificationFirestoreRepository {
                 if (n.scheduledAt != null && n.scheduledAt!.isAfter(now)) {
                   return false;
                 }
-                final isGeneral = n.audienceType == NotificationAudienceType.allBoutiqueCustomers ||
+
+                // If this is a stitching order update or targeted alert, strictly check customer UID match
+                final isStitchingOrTargeted = n.type == NotificationType.stitchingUpdate ||
+                    n.relatedEntityType == NotificationDestinationType.stitchingOrder ||
+                    n.audienceType == NotificationAudienceType.selectedCustomers;
+
+                if (isStitchingOrTargeted) {
+                  if (customerUid == null || customerUid.isEmpty) {
+                    return false;
+                  }
+                  return n.customerIds.contains(customerUid);
+                }
+
+                // General broadcast notifications for all boutique customers
+                final isGeneralBroadcast = n.audienceType == NotificationAudienceType.allBoutiqueCustomers ||
                     n.audienceType.name == 'allCustomers' ||
-                    n.customerIds.contains('all') ||
-                    n.customerIds.isEmpty;
-                final isTargeted = customerUid != null &&
+                    n.customerIds.contains('all');
+
+                final isDirectMatch = customerUid != null &&
                     customerUid.isNotEmpty &&
                     n.customerIds.contains(customerUid);
-                return isGeneral || isTargeted;
+
+                return isGeneralBroadcast || isDirectMatch;
               })
               .toList();
           list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -130,12 +145,36 @@ class NotificationFirestoreRepository {
 
     final rawCustomerIds = data['customerIds'] as List? ?? data['targetCustomerUids'] as List? ?? [];
 
+    String title = data['title'] as String? ?? '';
+    String body = data['body'] as String? ?? '';
+
+    // Clean up legacy or machine-formatted notifications into warm human-readable text
+    if (title.toLowerCase().contains('stitching order') ||
+        title.toLowerCase().contains('stitching request') ||
+        body.toLowerCase().contains('stitching order')) {
+      final reqMatch = RegExp(r'REQ-\d+').firstMatch('$title $body');
+      final reqCode = reqMatch?.group(0);
+
+      final nameMatch = RegExp(r'from\s+([A-Za-z\s]+)', caseSensitive: false).firstMatch(title);
+      final custName = nameMatch?.group(1)?.trim();
+
+      if (title.toLowerCase().startsWith('new stitching')) {
+        title = (custName != null && custName.isNotEmpty)
+            ? 'New stitching order from $custName'
+            : 'New stitching order';
+      }
+
+      if (body.toLowerCase().contains('customer submit') || body.toLowerCase().contains('was placed')) {
+        body = (reqCode != null && reqCode.isNotEmpty) ? 'Order details ($reqCode)' : 'Order details';
+      }
+    }
+
     return NotificationModel(
       id: data['id'] as String? ?? doc.id,
       boutiqueId: data['boutiqueId'] as String? ?? '',
       branchId: data['branchId'] as String?,
-      title: data['title'] as String? ?? '',
-      body: data['body'] as String? ?? '',
+      title: title,
+      body: body,
       type: type,
       audienceType: audience,
       customerIds: List<String>.from(rawCustomerIds),

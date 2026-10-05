@@ -256,3 +256,44 @@ class DesignMutationNotifier extends Notifier<AsyncValue<void>> {
     if (!state.hasError) ref.invalidate(designListProvider);
   }
 }
+
+// ─────────────────────────────────────────────
+// Derived: Trending Ranked Design List & Hero Design
+// ─────────────────────────────────────────────
+
+/// Ranks active designs for the Trending section based on engagement (favorites, likes),
+/// recency, tag bonuses ('trending', 'bestseller', 'hero'), and sort order.
+final trendingDesignListProvider = Provider<List<DesignModel>>((ref) {
+  final all = ref.watch(designListProvider).valueOrNull ?? [];
+  final active = all.where((d) => d.isActive).toList();
+  final now = DateTime.now();
+
+  active.sort((a, b) {
+    double score(DesignModel d) {
+      final favScore = d.favoriteCount * 3.0;
+      final likeScore = d.likeCount * 1.5;
+      final daysOld = now.difference(d.createdAt).inDays;
+      final recencyBonus = (14 - daysOld).clamp(0, 14) * 0.5;
+      final hasTrendingTag = d.tags.any(
+        (t) =>
+            t.toLowerCase().contains('trending') ||
+            t.toLowerCase().contains('bestseller') ||
+            t.toLowerCase().contains('hero'),
+      );
+      final tagBonus = hasTrendingTag ? 10.0 : 0.0;
+      final sortOrderPenalty = d.sortOrder * 0.1;
+
+      return favScore + likeScore + recencyBonus + tagBonus - sortOrderPenalty;
+    }
+
+    return score(b).compareTo(score(a));
+  });
+
+  return active;
+});
+
+final trendingHeroDesignProvider = Provider<DesignModel?>((ref) {
+  final trendingList = ref.watch(trendingDesignListProvider);
+  return trendingList.isNotEmpty ? trendingList.first : null;
+});
+

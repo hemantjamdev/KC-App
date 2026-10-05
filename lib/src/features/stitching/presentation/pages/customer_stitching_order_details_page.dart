@@ -7,6 +7,7 @@ import 'package:kc_app/src/features/stitching/presentation/widgets/stitching_ord
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/kc_app_bar.dart';
+import '../../../../core/widgets/sticky_note_card.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 
@@ -216,6 +217,9 @@ class _CustomerStitchingOrderDetailsPageState
                           '${_order.measurementSummary!.garmentLength} ${_order.measurementSummary!.unit}',
                         ),
                     ]),
+                  ],
+                  if (_order.notes != null && _order.notes!.isNotEmpty) ...[
+                    StickyNoteCard(note: _order.notes!),
                     const SizedBox(height: AppSpacing.md),
                   ],
 

@@ -16,8 +16,14 @@ class DesignFirestoreRepository {
         .snapshots()
         .map((snapshot) {
           final list = snapshot.docs.map(_fromFirestore).toList();
-          list.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-          return list;
+          final filtered = (boutiqueId.isNotEmpty && boutiqueId != 'boutique_01')
+              ? list
+                  .where((d) =>
+                      d.boutiqueId == boutiqueId || d.boutiqueId.isEmpty)
+                  .toList()
+              : list;
+          filtered.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+          return filtered;
         })
         .handleError((_) => <DesignModel>[]);
   }
@@ -118,6 +124,8 @@ class DesignFirestoreRepository {
       price: (data['price'] as num?)?.toDouble() ?? 0.0,
       colors: List<String>.from(data['colors'] as List? ?? []),
       sizes: List<String>.from(data['sizes'] as List? ?? []),
+      likeCount: (data['likeCount'] as num?)?.toInt() ?? 0,
+      favoriteCount: (data['favoriteCount'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -142,6 +150,8 @@ class DesignFirestoreRepository {
       'price': design.price,
       'colors': design.colors,
       'sizes': design.sizes,
+      'likeCount': design.likeCount,
+      'favoriteCount': design.favoriteCount,
       'updatedAt': FieldValue.serverTimestamp(),
       if (isCreate) 'createdAt': FieldValue.serverTimestamp(),
     };

@@ -2,16 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../../../../app/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/double_back_to_exit_wrapper.dart';
+import '../../../../core/widgets/network_listener_wrapper.dart';
 import '../../../auth/application/providers/auth_providers.dart';
 import '../../../auth/presentation/widgets/google_auth_bottom_sheet.dart';
 import '../../../notification/application/providers/notification_providers.dart';
 import '../../../notification/domain/models/notification_permission_state.dart';
-import '../../../notification/presentation/widgets/notification_permission_dialog.dart';
-
-import '../../../../core/widgets/double_back_to_exit_wrapper.dart';
-import '../../../../core/widgets/network_listener_wrapper.dart';
 
 /// Persistent 4-tab bottom navigation shell for Kapada Creation Customer App.
 /// Primary destinations: Home, Favorites, My Stitching, Profile.
@@ -49,31 +48,29 @@ class _CustomerShellPageState extends ConsumerState<CustomerShellPage> {
     final isAuthenticated = ref.watch(isAuthenticatedProvider);
     final permState = ref.watch(notificationPermissionProvider);
     final user = ref.watch(currentCustomerUserProvider);
-    final currentUserId = (user != null && user.uid.isNotEmpty) ? user.uid : 'guest_device';
+    final currentUserId =
+        (user != null && user.uid.isNotEmpty) ? user.uid : 'guest_device';
 
     // Ensure FCM service is initialized on shell load for guest and authenticated users
     if (_initializedFcmUserId != currentUserId) {
       _initializedFcmUserId = currentUserId;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ref.read(firebaseMessagingServiceProvider).initialize(
-          customerId: currentUserId,
-          firebaseUid: user?.uid,
-        );
+              customerId: currentUserId,
+              firebaseUid: user?.uid,
+            );
       });
     }
 
-    // Intentional notification permission prompt after home loads
+    // Direct system notification permission request on first load (no custom dialog)
     if (permState is NotificationPermissionNotRequested &&
         !_hasPromptedNotification) {
       _hasPromptedNotification = true;
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) return;
-        final shouldEnable = await NotificationPermissionDialog.show(context);
-        if (shouldEnable == true && mounted) {
-          await ref
-              .read(notificationPermissionProvider.notifier)
-              .requestPermission(customerUid: user?.uid);
-        }
+        await ref
+            .read(notificationPermissionProvider.notifier)
+            .requestPermission(customerUid: user?.uid);
       });
     }
 

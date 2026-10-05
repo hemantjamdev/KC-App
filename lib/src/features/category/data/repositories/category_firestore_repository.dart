@@ -48,22 +48,19 @@ class CategoryFirestoreRepository {
     ),
   ];
 
+  /// Live stream of categories from Firestore.
+  /// If Firestore has documents, emits exact live Firestore data.
   Stream<List<CategoryModel>> watchCategories(String boutiqueId) {
     return _firestore
         .collection(FirestorePaths.categories)
         .snapshots()
         .map((snapshot) {
+          if (snapshot.docs.isEmpty) {
+            return predefinedCategories;
+          }
           final list = snapshot.docs.map(_fromFirestore).toList();
-          final Map<String, CategoryModel> map = {};
-          for (final p in predefinedCategories) {
-            map[p.id] = p;
-          }
-          for (final c in list) {
-            map[c.id] = c;
-          }
-          final result = map.values.toList();
-          result.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-          return result;
+          list.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+          return list;
         })
         .handleError((_) => predefinedCategories);
   }

@@ -29,12 +29,16 @@ class FavoriteFirestoreRepository {
     required String designId,
   }) async {
     final docId = '${customerId}_$designId';
-    await _firestore.collection('favorites').doc(docId).set({
-      'id': docId,
-      'customerId': customerId,
-      'designId': designId,
-      'createdAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    try {
+      await _firestore.collection('favorites').doc(docId).set({
+        'id': docId,
+        'customerId': customerId,
+        'designId': designId,
+        'createdAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (_) {
+      // Gracefully handle permission restriction
+    }
   }
 
   /// Remove a design from customer's favorites.
@@ -43,6 +47,10 @@ class FavoriteFirestoreRepository {
     required String designId,
   }) async {
     final docId = '${customerId}_$designId';
-    await _firestore.collection('favorites').doc(docId).delete();
+    try {
+      await _firestore.collection('favorites').doc(docId).delete();
+    } catch (_) {
+      // Gracefully handle permission restriction
+    }
   }
 }

@@ -19,14 +19,18 @@ class DesignModel {
     required this.isActive,
     required this.createdAt,
     required this.updatedAt,
+    this.categoryIds = const [],
     this.price = 0.0,
     this.colors = const [],
     this.sizes = const [],
+    this.likeCount = 0,
+    this.favoriteCount = 0,
   });
 
   final String id;
   final String boutiqueId;
   final String categoryId;
+  final List<String> categoryIds;
   final String name;
   final String slug;
   final String? shortDescription;
@@ -49,10 +53,17 @@ class DesignModel {
   /// Available sizes (e.g. "XS", "S", "M", "L", "XL").
   final List<String> sizes;
 
+  /// Likes count for customer engagement.
+  final int likeCount;
+
+  /// Favorite count for customer engagement.
+  final int favoriteCount;
+
   DesignModel copyWith({
     String? id,
     String? boutiqueId,
     String? categoryId,
+    List<String>? categoryIds,
     String? name,
     String? slug,
     String? shortDescription,
@@ -68,6 +79,8 @@ class DesignModel {
     double? price,
     List<String>? colors,
     List<String>? sizes,
+    int? likeCount,
+    int? favoriteCount,
     bool clearShortDescription = false,
     bool clearDescription = false,
     bool clearThumbnailUrl = false,
@@ -76,6 +89,7 @@ class DesignModel {
       id: id ?? this.id,
       boutiqueId: boutiqueId ?? this.boutiqueId,
       categoryId: categoryId ?? this.categoryId,
+      categoryIds: categoryIds ?? this.categoryIds,
       name: name ?? this.name,
       slug: slug ?? this.slug,
       shortDescription: clearShortDescription
@@ -95,6 +109,8 @@ class DesignModel {
       price: price ?? this.price,
       colors: colors ?? this.colors,
       sizes: sizes ?? this.sizes,
+      likeCount: likeCount ?? this.likeCount,
+      favoriteCount: favoriteCount ?? this.favoriteCount,
     );
   }
 
@@ -119,7 +135,9 @@ class DesignModel {
         other.updatedAt == updatedAt &&
         other.price == price &&
         _listEquals(other.colors, colors) &&
-        _listEquals(other.sizes, sizes);
+        _listEquals(other.sizes, sizes) &&
+        other.likeCount == likeCount &&
+        other.favoriteCount == favoriteCount;
   }
 
   @override
@@ -142,12 +160,15 @@ class DesignModel {
     price,
     Object.hashAll(colors),
     Object.hashAll(sizes),
+    likeCount,
+    favoriteCount,
   );
 
   @override
   String toString() =>
       'DesignModel(id: $id, boutiqueId: $boutiqueId, categoryId: $categoryId, '
-      'name: $name, slug: $slug, price: $price, colors: $colors, sizes: $sizes)';
+      'name: $name, slug: $slug, price: $price, colors: $colors, sizes: $sizes, '
+      'likeCount: $likeCount, favoriteCount: $favoriteCount)';
 
   static bool _listEquals<T>(List<T> a, List<T> b) {
     if (a.length != b.length) return false;

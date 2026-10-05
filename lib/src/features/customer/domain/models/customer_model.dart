@@ -31,6 +31,7 @@ class CustomerModel {
     required this.updatedAt,
     this.createdBy,
     this.updatedBy,
+    this.notificationsEnabled = true,
   });
 
   /// Permanent customer UUID
@@ -51,6 +52,9 @@ class CustomerModel {
   final DateTime updatedAt;
   final String? createdBy;
   final String? updatedBy;
+
+  /// Whether customer has enabled push notifications
+  final bool notificationsEnabled;
 
   /// Convenience getters for name & boutiqueId
   String get name => displayName;
@@ -76,6 +80,7 @@ class CustomerModel {
     DateTime? updatedAt,
     String? createdBy,
     String? updatedBy,
+    bool? notificationsEnabled,
     bool clearFirebaseUid = false,
     bool clearEmail = false,
     bool clearPhone = false,
@@ -100,6 +105,7 @@ class CustomerModel {
       updatedAt: updatedAt ?? this.updatedAt,
       createdBy: clearCreatedBy ? null : (createdBy ?? this.createdBy),
       updatedBy: clearUpdatedBy ? null : (updatedBy ?? this.updatedBy),
+      notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
     );
   }
 
@@ -120,7 +126,8 @@ class CustomerModel {
         other.createdAt == createdAt &&
         other.updatedAt == updatedAt &&
         other.createdBy == createdBy &&
-        other.updatedBy == updatedBy;
+        other.updatedBy == updatedBy &&
+        other.notificationsEnabled == notificationsEnabled;
   }
 
   @override
@@ -139,12 +146,13 @@ class CustomerModel {
     updatedAt,
     createdBy,
     updatedBy,
+    notificationsEnabled,
   );
 
   @override
   String toString() =>
       'CustomerModel(id: $id, displayName: $displayName, email: $email, '
-      'source: ${source.name}, firebaseUid: $firebaseUid, isActive: $isActive)';
+      'source: ${source.name}, firebaseUid: $firebaseUid, notificationsEnabled: $notificationsEnabled)';
 
   static bool _listEquals<T>(List<T> a, List<T> b) {
     if (a.length != b.length) return false;

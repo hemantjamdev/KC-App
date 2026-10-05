@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/leather_stitched_container.dart';
 import '../../domain/models/boutique_model.dart';
 
 /// Ultra-Premium Luxury Kapada Creation Store Info Card.
+/// Designed with deep green leather texture, gold dashed stitching border, and gold accents.
 class StoreInfoCard extends StatelessWidget {
   const StoreInfoCard({super.key, this.boutique});
 
@@ -17,34 +20,18 @@ class StoreInfoCard extends StatelessWidget {
         : 'Timeless elegance, stitched with love.';
     final address = (boutique?.address != null && boutique!.address!.isNotEmpty)
         ? boutique!.address!
-        : 'F-21, Green Park Extension, New Delhi - 110016';
+        : 'Kapada Creation Boutique Studio';
     final phone = (boutique?.phone != null && boutique!.phone!.isNotEmpty)
         ? boutique!.phone!
-        : '+91 98765 43210';
+        : '+91 Studio Support';
     final hours = (boutique?.openingHours != null && boutique!.openingHours!.isNotEmpty)
         ? boutique!.openingHours!
         : 'Mon - Sat: 10:00 AM - 8:30 PM';
     final photoUrl = (boutique?.logoUrl != null && boutique!.logoUrl!.isNotEmpty)
         ? boutique!.logoUrl!
-        : 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?q=80&w=600&auto=format&fit=crop';
+        : null;
 
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: const Color(0xFFC5A880).withValues(alpha: 0.5),
-          width: 1.2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
+    return LeatherStitchedContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -59,9 +46,9 @@ class StoreInfoCard extends StatelessWidget {
                     Text(
                       name,
                       style: GoogleFonts.playfairDisplay(
-                        fontSize: 17,
+                        fontSize: 18,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1A1A1A),
+                        color: Colors.white,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -69,7 +56,7 @@ class StoreInfoCard extends StatelessWidget {
                       subtitle,
                       style: GoogleFonts.montserrat(
                         fontSize: 11.5,
-                        color: const Color(0xFF666666),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -80,16 +67,18 @@ class StoreInfoCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFAF7F2),
+                  color: Colors.white.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFFEAE5DC)),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.6),
+                  ),
                 ),
                 child: Text(
                   'Bespoke Studio',
                   style: GoogleFonts.montserrat(
                     fontSize: 9.5,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFFA67C52),
+                    color: Colors.white,
                   ),
                 ),
               ),
@@ -97,7 +86,10 @@ class StoreInfoCard extends StatelessWidget {
           ),
 
           const SizedBox(height: 14),
-          const Divider(height: 1, color: Color(0xFFEAE5DC)),
+          Divider(
+            height: 1,
+            color: Colors.white.withValues(alpha: 0.35),
+          ),
           const SizedBox(height: 14),
 
           // Info & Image Row
@@ -110,11 +102,12 @@ class StoreInfoCard extends StatelessWidget {
                   children: [
                     // Address
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Icon(
                           Icons.location_on_outlined,
-                          size: 15,
-                          color: Color(0xFFA67C52),
+                          size: 16,
+                          color: Colors.white,
                         ),
                         const SizedBox(width: 6),
                         Expanded(
@@ -122,7 +115,7 @@ class StoreInfoCard extends StatelessWidget {
                             address,
                             style: GoogleFonts.montserrat(
                               fontSize: 11.5,
-                              color: const Color(0xFF1A1A1A),
+                              color: Colors.white,
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -137,8 +130,8 @@ class StoreInfoCard extends StatelessWidget {
                       children: [
                         const Icon(
                           Icons.phone_outlined,
-                          size: 15,
-                          color: Color(0xFFA67C52),
+                          size: 16,
+                          color: Colors.white,
                         ),
                         const SizedBox(width: 6),
                         Text(
@@ -146,7 +139,7 @@ class StoreInfoCard extends StatelessWidget {
                           style: GoogleFonts.montserrat(
                             fontSize: 11.5,
                             fontWeight: FontWeight.w600,
-                            color: const Color(0xFF1A1A1A),
+                            color: Colors.white,
                           ),
                         ),
                       ],
@@ -158,15 +151,15 @@ class StoreInfoCard extends StatelessWidget {
                       children: [
                         const Icon(
                           Icons.access_time_rounded,
-                          size: 15,
-                          color: Color(0xFF888888),
+                          size: 16,
+                          color: Colors.white,
                         ),
                         const SizedBox(width: 6),
                         Text(
                           hours,
                           style: GoogleFonts.montserrat(
                             fontSize: 11,
-                            color: const Color(0xFF888888),
+                            color: Colors.white.withValues(alpha: 0.9),
                           ),
                         ),
                       ],
@@ -177,23 +170,42 @@ class StoreInfoCard extends StatelessWidget {
 
               const SizedBox(width: 12),
 
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  photoUrl,
-                  width: 72,
-                  height: 84,
-                  fit: BoxFit.cover,
-                  errorBuilder: (ctx, err, stack) => Container(
-                    width: 72,
-                    height: 84,
-                    color: const Color(0xFFFAF7F2),
-                    child: const Icon(
-                      Icons.storefront_rounded,
-                      color: Color(0xFF1A1A1A),
-                      size: 24,
-                    ),
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.6),
                   ),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(11),
+                  child: photoUrl != null && photoUrl.startsWith('http')
+                      ? Image.network(
+                          photoUrl,
+                          width: 72,
+                          height: 84,
+                          fit: BoxFit.cover,
+                          errorBuilder: (ctx, err, stack) => Container(
+                            width: 72,
+                            height: 84,
+                            color: AppColors.brandGreen800,
+                            child: const Icon(
+                              Icons.storefront_rounded,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                        )
+                      : Container(
+                          width: 72,
+                          height: 84,
+                          color: AppColors.brandGreen800,
+                          child: const Icon(
+                            Icons.storefront_rounded,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
                 ),
               ),
             ],
