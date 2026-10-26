@@ -6,7 +6,7 @@ import 'browse_more_trending_card.dart';
 import 'trending_hero_card.dart';
 
 /// Horizontal Luxury Carousel for Home Page Trending Section.
-/// Displays top scored hero card + Browse More Trending card.
+/// Displays top-ranked boutique garments + Browse More Trending card.
 class TrendingCarousel extends ConsumerWidget {
   const TrendingCarousel({super.key});
 
@@ -15,26 +15,27 @@ class TrendingCarousel extends ConsumerWidget {
     final trendingList = ref.watch(trendingDesignListProvider);
     if (trendingList.isEmpty) return const SizedBox.shrink();
 
-    final heroDesign = trendingList.first;
+    // Display top 6 trending designs in the home carousel
+    final displayList = trendingList.take(6).toList();
     final totalCount = trendingList.length;
 
     return SizedBox(
-      height: 290,
-      child: ListView(
+      height: 330,
+      child: ListView.separated(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.only(left: 20),
-        children: [
-          // Hero Card (#1 Ranked Design)
-          SizedBox(
-            width: MediaQuery.of(context).size.width - 40,
-            child: TrendingHeroCard(design: heroDesign),
-          ),
-          const SizedBox(width: 14),
-
-          // 2nd / End Card: Browse More Trending
-          BrowseMoreTrendingCard(totalCount: totalCount),
-        ],
+        itemCount: displayList.length + 1,
+        separatorBuilder: (ctx, idx) => const SizedBox(width: 14),
+        itemBuilder: (context, index) {
+          if (index < displayList.length) {
+            return TrendingHeroCard(
+              design: displayList[index],
+              rankIndex: index + 1,
+            );
+          }
+          return BrowseMoreTrendingCard(totalCount: totalCount);
+        },
       ),
     );
   }

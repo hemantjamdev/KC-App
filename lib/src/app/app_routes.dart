@@ -2,9 +2,11 @@ import 'package:go_router/go_router.dart';
 
 import '../features/category/domain/models/category_model.dart';
 import '../features/category/presentation/pages/customer_category_designs_page.dart';
+import '../features/category/presentation/pages/customer_category_list_page.dart';
 import '../features/customer/presentation/pages/customer_profile_edit_page.dart';
 import '../features/customer/presentation/pages/customer_profile_page.dart';
 import '../features/design/domain/models/design_model.dart';
+import '../features/design/presentation/pages/customer_all_designs_page.dart';
 import '../features/design/presentation/pages/customer_design_details_page.dart';
 import '../features/design/presentation/pages/customer_favorites_page.dart';
 import '../features/home/presentation/pages/customer_home_page.dart';
@@ -51,13 +53,15 @@ abstract class AppRoutes {
   static const String customerNotificationDetails =
       '/customer/notifications/details';
 
+  // Dedicated category & catalogue routes
+  static const String customerCategoryList = '/customer/categories';
+  static const String customerCategoryDesigns = '/customer/category/designs';
+  static const String customerAllDesigns = '/customer/designs/all';
+
   // Legacy/Alias route fallbacks
   static const String welcome = splash;
   static const String customerSelectBoutique = customerHome;
   static const String customerSelectBranch = customerHome;
-  static const String customerCategoryList = customerHome;
-  static const String customerCategoryDesigns = '/customer/category/designs';
-  static const String customerAllDesigns = customerHome;
 }
 
 final GoRouter appRouter = GoRouter(
@@ -134,10 +138,35 @@ final GoRouter appRouter = GoRouter(
       ),
     ),
     GoRoute(
+      path: AppRoutes.customerCategoryList,
+      builder: (context, state) => const CustomerCategoryListPage(),
+    ),
+    GoRoute(
+      path: AppRoutes.customerAllDesigns,
+      builder: (context, state) => const CustomerAllDesignsPage(),
+    ),
+    GoRoute(
       path: AppRoutes.customerCategoryDesigns,
-      builder: (context, state) => CustomerCategoryDesignsPage(
-        category: state.extra as CategoryModel,
-      ),
+      builder: (context, state) {
+        final extra = state.extra;
+        if (extra is CategoryModel) {
+          return CustomerCategoryDesignsPage(category: extra);
+        }
+        final catId = state.uri.queryParameters['id'] ?? '';
+        final catName = state.uri.queryParameters['name'] ?? 'Collection';
+        final catSlug = state.uri.queryParameters['slug'] ?? catName.toLowerCase();
+        final fallbackCategory = CategoryModel(
+          id: catId,
+          boutiqueId: 'boutique_01',
+          name: catName,
+          slug: catSlug,
+          sortOrder: 0,
+          isActive: true,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+        return CustomerCategoryDesignsPage(category: fallbackCategory);
+      },
     ),
   ],
 );

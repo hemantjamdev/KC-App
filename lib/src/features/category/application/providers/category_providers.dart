@@ -111,10 +111,14 @@ final filteredCategoryListProvider = Provider<List<CategoryModel>>((ref) {
 /// Active categories only (used by KC-App customer views and design filtering).
 final activeCategoryListProvider = Provider<List<CategoryModel>>((ref) {
   final all = ref.watch(categoryListProvider).valueOrNull ?? [];
-  return all.where((c) => c.isActive).toList(growable: false)..sort((a, b) {
+  final source =
+      all.isNotEmpty ? all : CategoryFirestoreRepository.predefinedCategories;
+  final list = source.where((c) => c.isActive).toList();
+  list.sort((a, b) {
     final s = a.sortOrder.compareTo(b.sortOrder);
     return s != 0 ? s : a.name.compareTo(b.name);
   });
+  return list;
 });
 
 // ─────────────────────────────────────────────

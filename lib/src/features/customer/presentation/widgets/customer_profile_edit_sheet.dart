@@ -35,8 +35,10 @@ class _CustomerProfileEditSheetState
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _photoUrlController = TextEditingController();
   final _nameFocusNode = FocusNode();
   final _phoneFocusNode = FocusNode();
+  final _photoUrlFocusNode = FocusNode();
   bool _isSaving = false;
 
   @override
@@ -48,14 +50,17 @@ class _CustomerProfileEditSheetState
     _nameController.text =
         customer?.name ?? user?.displayName ?? 'Valued Customer';
     _phoneController.text = customer?.phone ?? user?.phoneNumber ?? '';
+    _photoUrlController.text = customer?.photoUrl ?? user?.photoURL ?? '';
   }
 
   @override
   void dispose() {
     _nameFocusNode.dispose();
     _phoneFocusNode.dispose();
+    _photoUrlFocusNode.dispose();
     _nameController.dispose();
     _phoneController.dispose();
+    _photoUrlController.dispose();
     super.dispose();
   }
 
@@ -74,6 +79,7 @@ class _CustomerProfileEditSheetState
     }
 
     final now = DateTime.now();
+    final photo = _photoUrlController.text.trim();
     final updated =
         (customer ??
                 CustomerModel(
@@ -91,6 +97,8 @@ class _CustomerProfileEditSheetState
             .copyWith(
               displayName: _nameController.text.trim(),
               phone: _phoneController.text.trim(),
+              photoUrl: photo.isNotEmpty ? photo : null,
+              clearPhotoUrl: photo.isEmpty,
               updatedAt: now,
             );
 
@@ -113,7 +121,10 @@ class _CustomerProfileEditSheetState
     final customer = ref.watch(customerProfileProvider).valueOrNull;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
-    final photoUrl = customer?.photoUrl ?? user?.photoURL;
+    final enteredPhoto = _photoUrlController.text.trim();
+    final photoUrl = enteredPhoto.isNotEmpty
+        ? enteredPhoto
+        : (customer?.photoUrl ?? user?.photoURL);
     final initials = (customer?.name ?? user?.displayName ?? 'KC')
         .trim()
         .split(' ')
@@ -426,6 +437,77 @@ class _CustomerProfileEditSheetState
                             size: 18,
                             color: const Color(0xFF162D20),
                           ),
+                          filled: true,
+                          fillColor: Colors.white,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 14,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide:
+                                const BorderSide(color: AppColors.borderSoft),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide:
+                                const BorderSide(color: AppColors.borderSoft),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: Color(0xFF162D20),
+                              width: 1.5,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // ── Profile Photo URL ──
+                      Text(
+                        'PROFILE PHOTO URL (OPTIONAL)',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      TextFormField(
+                        controller: _photoUrlController,
+                        focusNode: _photoUrlFocusNode,
+                        textInputAction: TextInputAction.done,
+                        onFieldSubmitted: (_) =>
+                            FocusScope.of(context).unfocus(),
+                        style: GoogleFonts.montserrat(
+                          fontSize: 14,
+                          color: AppColors.textPrimary,
+                        ),
+                        keyboardType: TextInputType.url,
+                        decoration: InputDecoration(
+                          hintText: 'https://example.com/avatar.jpg',
+                          hintStyle: GoogleFonts.montserrat(
+                            fontSize: 13,
+                            color: AppColors.mutedText,
+                          ),
+                          prefixIcon: Icon(
+                            PhosphorIcons.camera(),
+                            size: 18,
+                            color: const Color(0xFF162D20),
+                          ),
+                          suffixIcon: _photoUrlController.text.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear_rounded, size: 18),
+                                  onPressed: () {
+                                    setState(() {
+                                      _photoUrlController.clear();
+                                    });
+                                  },
+                                )
+                              : null,
                           filled: true,
                           fillColor: Colors.white,
                           contentPadding: const EdgeInsets.symmetric(

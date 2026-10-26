@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../app/app_routes.dart';
+import '../../../../core/navigation/navigation_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/customer_empty_state.dart';
 import '../../../design/application/providers/design_providers.dart';
@@ -73,23 +76,37 @@ class _CustomerSectionListingPageState
     final displayed = filtered.take(_visibleItemCount).toList();
     final hasMore = displayed.length < filtered.length;
 
-    return Scaffold(
-      backgroundColor: AppColors.warmIvory,
-      appBar: AppBar(
-        backgroundColor: AppColors.surfaceWhite,
-        foregroundColor: AppColors.charcoal,
-        elevation: 0,
-        scrolledUnderElevation: 0.5,
-        iconTheme: const IconThemeData(color: AppColors.charcoal),
-        title: Text(
-          title,
-          style: GoogleFonts.playfairDisplay(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: AppColors.charcoal,
+    return PopScope(
+      canPop: context.canPop(),
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        if (context.mounted) context.popOrGo(AppRoutes.customerHome);
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.warmIvory,
+        appBar: AppBar(
+          backgroundColor: AppColors.surfaceWhite,
+          foregroundColor: AppColors.charcoal,
+          elevation: 0,
+          scrolledUnderElevation: 0.5,
+          iconTheme: const IconThemeData(color: AppColors.charcoal),
+          leading: IconButton(
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: AppColors.charcoal,
+              size: 20,
+            ),
+            onPressed: () => context.popOrGo(AppRoutes.customerHome),
+          ),
+          title: Text(
+            title,
+            style: GoogleFonts.playfairDisplay(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: AppColors.charcoal,
+            ),
           ),
         ),
-      ),
       body: SafeArea(
         child: isLoading
             ? const Center(
@@ -194,8 +211,9 @@ class _CustomerSectionListingPageState
                     ),
                   ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   List<DesignModel> _filterForSection(
     List<DesignModel> designs,

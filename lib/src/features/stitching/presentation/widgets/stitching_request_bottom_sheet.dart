@@ -34,6 +34,7 @@ class _StitchingRequestBottomSheetState
   final _titleController = TextEditingController();
   final _phoneController = TextEditingController();
   final _notesController = TextEditingController();
+  final _imageUrlController = TextEditingController();
   final _titleFocusNode = FocusNode();
   final _phoneFocusNode = FocusNode();
   String? _selectedCategory;
@@ -67,6 +68,7 @@ class _StitchingRequestBottomSheetState
     _titleController.dispose();
     _phoneController.dispose();
     _notesController.dispose();
+    _imageUrlController.dispose();
     super.dispose();
   }
 
@@ -78,6 +80,9 @@ class _StitchingRequestBottomSheetState
           category: _selectedCategory,
           phone: _phoneController.text,
           notes: _notesController.text,
+          designImageUrl: _imageUrlController.text.trim().isNotEmpty
+              ? _imageUrlController.text.trim()
+              : null,
         );
 
     if (success && mounted) {
@@ -237,6 +242,72 @@ class _StitchingRequestBottomSheetState
                 hintText: 'e.g. +91 98765 43210',
               ),
             ),
+
+            const SizedBox(height: 16),
+
+            // Design / Reference Photo URL with Live Preview
+            TextFormField(
+              controller: _imageUrlController,
+              enabled: !isSubmitting,
+              style: GoogleFonts.montserrat(fontSize: 14),
+              keyboardType: TextInputType.url,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(
+                labelText: 'Design / Reference Photo URL (Optional)',
+                hintText: 'https://example.com/dress.jpg',
+                prefixIcon: const Icon(Icons.add_photo_alternate_rounded, size: 20),
+                suffixIcon: _imageUrlController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear_rounded, size: 18),
+                        onPressed: () {
+                          setState(() {
+                            _imageUrlController.clear();
+                          });
+                        },
+                      )
+                    : null,
+              ),
+            ),
+            if (_imageUrlController.text.trim().isNotEmpty &&
+                _imageUrlController.text.trim().startsWith('http')) ...[
+              const SizedBox(height: 10),
+              Container(
+                height: 110,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.3),
+                  ),
+                  color: AppColors.brandGreen50,
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Image.network(
+                  _imageUrlController.text.trim(),
+                  fit: BoxFit.cover,
+                  errorBuilder: (ctx, err, stack) => const Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.broken_image_rounded,
+                          color: AppColors.mutedText,
+                          size: 20,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Unable to load preview',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.mutedText,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
 
             const SizedBox(height: 16),
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_toast.dart';
@@ -9,7 +10,7 @@ import '../../application/providers/customer_providers.dart';
 import '../../domain/models/customer_model.dart';
 
 /// Edit Customer Profile Page for KC-App.
-/// Allows updating customer display name and contact phone number. Read-only email.
+/// Allows updating customer display name, contact phone number, and profile photo URL.
 class CustomerProfileEditPage extends ConsumerStatefulWidget {
   const CustomerProfileEditPage({super.key});
 
@@ -23,8 +24,10 @@ class _CustomerProfileEditPageState
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _photoUrlController = TextEditingController();
   final _nameFocusNode = FocusNode();
   final _phoneFocusNode = FocusNode();
+  final _photoUrlFocusNode = FocusNode();
 
   bool _hasChanges = false;
 
@@ -37,9 +40,11 @@ class _CustomerProfileEditPageState
     _nameController.text =
         customer?.name ?? user?.displayName ?? 'Valued Customer';
     _phoneController.text = customer?.phone ?? user?.phoneNumber ?? '';
+    _photoUrlController.text = customer?.photoUrl ?? user?.photoURL ?? '';
 
     _nameController.addListener(_markDirty);
     _phoneController.addListener(_markDirty);
+    _photoUrlController.addListener(_markDirty);
   }
 
   void _markDirty() {
@@ -50,8 +55,10 @@ class _CustomerProfileEditPageState
   void dispose() {
     _nameFocusNode.dispose();
     _phoneFocusNode.dispose();
+    _photoUrlFocusNode.dispose();
     _nameController.dispose();
     _phoneController.dispose();
+    _photoUrlController.dispose();
     super.dispose();
   }
 
@@ -64,6 +71,7 @@ class _CustomerProfileEditPageState
     if (user == null) return;
 
     final now = DateTime.now();
+    final photo = _photoUrlController.text.trim();
     final updated =
         (customer ??
                 CustomerModel(
@@ -81,6 +89,8 @@ class _CustomerProfileEditPageState
             .copyWith(
               displayName: _nameController.text.trim(),
               phone: _phoneController.text.trim(),
+              photoUrl: photo.isNotEmpty ? photo : null,
+              clearPhotoUrl: photo.isEmpty,
               updatedAt: now,
             );
 
@@ -98,6 +108,20 @@ class _CustomerProfileEditPageState
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentCustomerUserProvider);
+    final customer = ref.watch(customerProfileProvider).valueOrNull;
+
+    final enteredPhoto = _photoUrlController.text.trim();
+    final effectivePhoto = enteredPhoto.isNotEmpty
+        ? enteredPhoto
+        : (customer?.photoUrl ?? user?.photoURL);
+    final initials = (_nameController.text.isNotEmpty
+            ? _nameController.text
+            : (customer?.name ?? user?.displayName ?? 'KC'))
+        .trim()
+        .split(' ')
+        .map((e) => e.isNotEmpty ? e[0] : '')
+        .take(2)
+        .join();
 
     return Scaffold(
       backgroundColor: AppColors.warmIvory,
@@ -125,6 +149,58 @@ class _CustomerProfileEditPageState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Avatar Preview Banner
+                    Center(
+                      child: Container(
+                        width: 90,
+                        height: 90,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.brandGreen800,
+                          border: Border.all(
+                            color: AppColors.goldAccent,
+                            width: 2.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.12),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: ClipOval(
+                          child: (effectivePhoto != null &&
+                                  effectivePhoto.startsWith('http'))
+                              ? Image.network(
+                                  effectivePhoto,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) => Center(
+                                    child: Text(
+                                      initials.toUpperCase(),
+                                      style: GoogleFonts.playfairDisplay(
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : Center(
+                                  child: Text(
+                                    initials.toUpperCase(),
+                                    style: GoogleFonts.playfairDisplay(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
                     // Read-only Email Field
                     Text(
                       'GOOGLE EMAIL (READ-ONLY)',
@@ -152,14 +228,15 @@ class _CustomerProfileEditPageState
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 18),
 
                     // Display Name
                     TextFormField(
                       controller: _nameController,
                       focusNode: _nameFocusNode,
                       textInputAction: TextInputAction.next,
-                      onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_phoneFocusNode),
+                      onFieldSubmitted: (_) =>
+                          FocusScope.of(context).requestFocus(_phoneFocusNode),
                       style: GoogleFonts.montserrat(fontSize: 14),
                       decoration: const InputDecoration(
                         labelText: 'Customer Name *',
@@ -178,13 +255,42 @@ class _CustomerProfileEditPageState
                     TextFormField(
                       controller: _phoneController,
                       focusNode: _phoneFocusNode,
-                      textInputAction: TextInputAction.done,
-                      onFieldSubmitted: (_) => FocusScope.of(context).unfocus(),
+                      textInputAction: TextInputAction.next,
+                      onFieldSubmitted: (_) => FocusScope.of(context)
+                          .requestFocus(_photoUrlFocusNode),
                       style: GoogleFonts.montserrat(fontSize: 14),
                       keyboardType: TextInputType.phone,
                       decoration: const InputDecoration(
                         labelText: 'Contact Phone Number',
                         hintText: 'e.g. +91 98765 43210',
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Photo URL
+                    TextFormField(
+                      controller: _photoUrlController,
+                      focusNode: _photoUrlFocusNode,
+                      textInputAction: TextInputAction.done,
+                      onFieldSubmitted: (_) => FocusScope.of(context).unfocus(),
+                      style: GoogleFonts.montserrat(fontSize: 14),
+                      keyboardType: TextInputType.url,
+                      decoration: InputDecoration(
+                        labelText: 'Profile Photo URL (Optional)',
+                        hintText: 'https://example.com/photo.jpg',
+                        prefixIcon: Icon(
+                          PhosphorIcons.camera(),
+                          size: 18,
+                          color: AppColors.brandGreen800,
+                        ),
+                        suffixIcon: _photoUrlController.text.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear_rounded, size: 18),
+                                onPressed: () {
+                                  setState(() => _photoUrlController.clear());
+                                },
+                              )
+                            : null,
                       ),
                     ),
 

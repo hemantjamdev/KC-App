@@ -1,51 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+
 import '../../../../app/app_routes.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/navigation/navigation_extensions.dart';
 import '../../../../core/widgets/app_loading_indicator.dart';
-import '../../../../core/widgets/kc_app_bar.dart';
 import '../../domain/models/category_model.dart';
-import '../controllers/category_controller.dart';
+import '../../application/providers/category_providers.dart';
 
-/// Full-screen customer category list page with search.
-class CustomerCategoryListPage extends StatefulWidget {
+/// Full-screen customer category list page with live search and Riverpod state.
+class CustomerCategoryListPage extends ConsumerStatefulWidget {
   const CustomerCategoryListPage({super.key});
 
   @override
-  State<CustomerCategoryListPage> createState() =>
+  ConsumerState<CustomerCategoryListPage> createState() =>
       _CustomerCategoryListPageState();
 }
 
-class _CustomerCategoryListPageState extends State<CustomerCategoryListPage> {
-  late CategoryController _controller;
+class _CustomerCategoryListPageState
+    extends ConsumerState<CustomerCategoryListPage> {
   final TextEditingController _searchController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = CategoryController(boutiqueId: 'boutique_01');
-    _controller.addListener(_onUpdate);
-    _controller.loadCategories();
-  }
-
-  void _onUpdate() {
-    if (mounted) setState(() {});
-  }
+  String _searchQuery = '';
 
   @override
   void dispose() {
-    _controller.removeListener(_onUpdate);
-    _controller.dispose();
     _searchController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final visible = _controller.visibleCategories;
+    final categoriesAsync = ref.watch(categoryListProvider);
+    final allCategories = ref.watch(activeCategoryListProvider);
+    final isLoading = categoriesAsync.isLoading && allCategories.isEmpty;
+
+    final visible = _searchQuery.isEmpty
+        ? allCategories
+        : allCategories.where((c) {
+            final q = _searchQuery.toLowerCase();
+            return c.name.toLowerCase().contains(q) ||
+                c.slug.toLowerCase().contains(q) ||
+                (c.description != null &&
+                    c.description!.toLowerCase().contains(q));
+          }).toList();
 
     return PopScope(
       canPop: context.canPop(),
@@ -55,12 +56,30 @@ class _CustomerCategoryListPageState extends State<CustomerCategoryListPage> {
       },
       child: Scaffold(
         backgroundColor: AppColors.background,
-        appBar: KCAppBar(
-          title: 'Collections & Categories',
-          onBackTap: () => context.popOrGo(AppRoutes.customerHome),
+        appBar: AppBar(
+          backgroundColor: AppColors.surface,
+          elevation: 0,
+          scrolledUnderElevation: 0.5,
+          leading: IconButton(
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: AppColors.textPrimary,
+              size: 20,
+            ),
+            onPressed: () => context.popOrGo(AppRoutes.customerHome),
+          ),
+          title: Text(
+            'Collections & Categories',
+            style: GoogleFonts.playfairDisplay(
+              fontSize: 19,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          centerTitle: true,
         ),
         body: SafeArea(
-          child: _controller.isLoading
+          child: isLoading
               ? const Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -77,80 +96,85 @@ class _CustomerCategoryListPageState extends State<CustomerCategoryListPage> {
                     ],
                   ),
                 )
-              : Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.lg,
-                        AppSpacing.md,
-                        AppSpacing.lg,
-                        AppSpacing.md,
-                      ),
-                      child: TextField(
-                        controller: _searchController,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 14,
+              : RefreshIndicator(
+                  color: AppColors.primary,
+                  onRefresh: () async {
+                    ref.invalidate(categoryListProvider);
+                    await ref.read(categoryListProvider.future);
+                  },
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.lg,
+                          AppSpacing.md,
+                          AppSpacing.lg,
+                          AppSpacing.md,
                         ),
-                        cursorColor: AppColors.primary,
-                        decoration: InputDecoration(
-                          hintText: 'Search categories...',
-                          hintStyle: const TextStyle(
-                            color: AppColors.textHint,
+                        child: TextField(
+                          controller: _searchController,
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
                             fontSize: 14,
                           ),
-                          prefixIcon: const Icon(
-                            Icons.search_rounded,
-                            color: AppColors.textMuted,
-                            size: 20,
-                          ),
-                          suffixIcon: _searchController.text.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(
-                                    Icons.clear_rounded,
-                                    color: AppColors.textMuted,
-                                    size: 20,
-                                  ),
-                                  onPressed: () {
-                                    _searchController.clear();
-                                    _controller.clearSearch();
-                                  },
-                                )
-                              : null,
-                          filled: true,
-                          fillColor: AppColors.surface,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.md,
-                            vertical: AppSpacing.sm,
-                          ),
-                          border: const OutlineInputBorder(
-                            borderRadius: AppRadius.borderMd,
-                            borderSide: BorderSide(
-                              color: AppColors.surfaceBorder,
+                          cursorColor: AppColors.primary,
+                          decoration: InputDecoration(
+                            hintText: 'Search categories...',
+                            hintStyle: const TextStyle(
+                              color: AppColors.textHint,
+                              fontSize: 14,
+                            ),
+                            prefixIcon: const Icon(
+                              Icons.search_rounded,
+                              color: AppColors.textMuted,
+                              size: 20,
+                            ),
+                            suffixIcon: _searchController.text.isNotEmpty
+                                ? IconButton(
+                                    icon: const Icon(
+                                      Icons.clear_rounded,
+                                      color: AppColors.textMuted,
+                                      size: 20,
+                                    ),
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      setState(() => _searchQuery = '');
+                                    },
+                                  )
+                                : null,
+                            filled: true,
+                            fillColor: AppColors.surface,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.md,
+                              vertical: AppSpacing.sm,
+                            ),
+                            border: const OutlineInputBorder(
+                              borderRadius: AppRadius.borderMd,
+                              borderSide: BorderSide(
+                                color: AppColors.surfaceBorder,
+                              ),
+                            ),
+                            enabledBorder: const OutlineInputBorder(
+                              borderRadius: AppRadius.borderMd,
+                              borderSide: BorderSide(
+                                color: AppColors.surfaceBorder,
+                              ),
+                            ),
+                            focusedBorder: const OutlineInputBorder(
+                              borderRadius: AppRadius.borderMd,
+                              borderSide: BorderSide(
+                                color: AppColors.primary,
+                                width: 1.5,
+                              ),
                             ),
                           ),
-                          enabledBorder: const OutlineInputBorder(
-                            borderRadius: AppRadius.borderMd,
-                            borderSide: BorderSide(
-                              color: AppColors.surfaceBorder,
-                            ),
-                          ),
-                          focusedBorder: const OutlineInputBorder(
-                            borderRadius: AppRadius.borderMd,
-                            borderSide: BorderSide(
-                              color: AppColors.primary,
-                              width: 1.5,
-                            ),
-                          ),
+                          onChanged: (v) {
+                            setState(() => _searchQuery = v.trim());
+                          },
                         ),
-                        onChanged: (v) {
-                          _controller.searchCategories(v);
-                          setState(() {});
-                        },
                       ),
-                    ),
-                    Expanded(
-                      child: visible.isEmpty
+                      Expanded(
+                        child: visible.isEmpty
                           ? Center(
                               child: Padding(
                                 padding: const EdgeInsets.all(AppSpacing.xl),
@@ -187,7 +211,9 @@ class _CustomerCategoryListPageState extends State<CustomerCategoryListPage> {
                                 AppSpacing.lg,
                                 AppSpacing.xl,
                               ),
-                              physics: const BouncingScrollPhysics(),
+                              physics: const AlwaysScrollableScrollPhysics(
+                                parent: BouncingScrollPhysics(),
+                              ),
                               itemCount: visible.length,
                               separatorBuilder: (context, index) =>
                                   const SizedBox(height: AppSpacing.sm),
@@ -201,8 +227,9 @@ class _CustomerCategoryListPageState extends State<CustomerCategoryListPage> {
                                 );
                               },
                             ),
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
         ),
       ),
@@ -236,6 +263,13 @@ class _CategoryListCard extends StatelessWidget {
           color: AppColors.surface,
           borderRadius: AppRadius.borderLg,
           border: Border.all(color: AppColors.surfaceBorder),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -247,7 +281,8 @@ class _CategoryListCard extends StatelessWidget {
                 borderRadius: AppRadius.borderMd,
               ),
               clipBehavior: Clip.antiAlias,
-              child: category.imageUrl != null
+              child: category.imageUrl != null &&
+                      category.imageUrl!.startsWith('http')
                   ? Image.network(
                       category.imageUrl!,
                       fit: BoxFit.cover,
@@ -263,19 +298,20 @@ class _CategoryListCard extends StatelessWidget {
                 children: [
                   Text(
                     category.name,
-                    style: const TextStyle(
+                    style: GoogleFonts.playfairDisplay(
                       color: AppColors.textPrimary,
-                      fontSize: 15,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  if (category.description != null) ...[
+                  if (category.description != null &&
+                      category.description!.trim().isNotEmpty) ...[
                     const SizedBox(height: 2),
                     Text(
-                      category.description!,
-                      style: const TextStyle(
+                      category.description!.trim(),
+                      style: GoogleFonts.montserrat(
                         color: AppColors.textMuted,
                         fontSize: 12,
                       ),

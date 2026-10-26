@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -97,14 +98,30 @@ class ActiveStitchingPreviewCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.brandGreen50,
             borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.borderSoft),
           ),
-          child: const Center(
-            child: Icon(
-              Icons.design_services_rounded,
-              color: AppColors.primary,
-              size: 32,
-            ),
-          ),
+          clipBehavior: Clip.antiAlias,
+          child: (order.designReferences.isNotEmpty &&
+                  order.designReferences.first.thumbnailUrl != null &&
+                  order.designReferences.first.thumbnailUrl!.startsWith('http'))
+              ? CachedNetworkImage(
+                  imageUrl: order.designReferences.first.thumbnailUrl!,
+                  fit: BoxFit.cover,
+                  errorWidget: (ctx, err, stack) => const Center(
+                    child: Icon(
+                      Icons.design_services_rounded,
+                      color: AppColors.primary,
+                      size: 32,
+                    ),
+                  ),
+                )
+              : const Center(
+                  child: Icon(
+                    Icons.design_services_rounded,
+                    color: AppColors.primary,
+                    size: 32,
+                  ),
+                ),
         ),
         const SizedBox(width: 14),
 

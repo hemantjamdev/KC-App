@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../app/app_routes.dart';
+import '../../../../core/navigation/navigation_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../design/application/providers/design_providers.dart';
-import '../../../trending/presentation/widgets/instagram_trending_card.dart';
+import '../../../section/presentation/widgets/section_product_list_item.dart';
 import '../../domain/models/category_model.dart';
 
 /// Customer Category Designs Page — displays real Firestore products for a specific category.
@@ -21,69 +23,124 @@ class CustomerCategoryDesignsPage extends ConsumerWidget {
     final allDesigns = designsAsync.valueOrNull ?? [];
     final isLoading = designsAsync.isLoading;
 
-    final catId = category.id.toLowerCase();
-    final catName = category.name.toLowerCase();
+    final catId = category.id.toLowerCase().trim();
+    final catName = category.name.toLowerCase().trim();
+    final catSlug = category.slug.toLowerCase().trim();
 
     final categoryDesigns = allDesigns.where((d) {
       if (!d.isActive) return false;
-      if (d.categoryId.toLowerCase() == catId) return true;
-      if (d.categoryIds.any((id) => id.toLowerCase() == catId)) return true;
-      if (d.tags.any((t) => t.toLowerCase().contains(catName))) return true;
+
+      final dCatId = d.categoryId.toLowerCase().trim();
+      if (catId.isNotEmpty && dCatId == catId) return true;
+      if (catSlug.isNotEmpty && dCatId == catSlug) return true;
+
+      final dCatIds = d.categoryIds.map((id) => id.toLowerCase().trim()).toList();
+      if (catId.isNotEmpty && dCatIds.contains(catId)) return true;
+      if (catSlug.isNotEmpty && dCatIds.contains(catSlug)) return true;
+
+      if (catName.isNotEmpty &&
+          d.tags.any((t) => t.toLowerCase().contains(catName))) {
+        return true;
+      }
+      if (catSlug.isNotEmpty &&
+          d.tags.any((t) => t.toLowerCase().contains(catSlug))) {
+        return true;
+      }
+      if (catName.isNotEmpty &&
+          d.name.toLowerCase().contains(catName)) {
+        return true;
+      }
+      if (catSlug.isNotEmpty &&
+          d.searchKeywords.any((k) => k.toLowerCase().contains(catSlug))) {
+        return true;
+      }
+
       return false;
     }).toList();
 
-    return Scaffold(
-      backgroundColor: AppColors.warmIvory,
-      appBar: AppBar(
+    return PopScope(
+      canPop: context.canPop(),
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        if (context.mounted) context.popOrGo(AppRoutes.customerHome);
+      },
+      child: Scaffold(
         backgroundColor: AppColors.warmIvory,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.charcoal, size: 20),
-          onPressed: () => context.pop(),
-        ),
-        title: Text(
-          category.name,
-          style: GoogleFonts.playfairDisplay(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: AppColors.charcoal,
+        appBar: AppBar(
+          backgroundColor: AppColors.surfaceWhite,
+          elevation: 0,
+          scrolledUnderElevation: 0.5,
+          leading: IconButton(
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: AppColors.charcoal,
+              size: 20,
+            ),
+            onPressed: () => context.popOrGo(AppRoutes.customerHome),
           ),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                category.name,
+                style: GoogleFonts.playfairDisplay(
+                  fontSize: 19,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.charcoal,
+                ),
+              ),
+              if (!isLoading)
+                Text(
+                  '${categoryDesigns.length} ${categoryDesigns.length == 1 ? "design" : "designs"} available',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.mutedText,
+                  ),
+                ),
+            ],
+          ),
+          centerTitle: true,
         ),
-        centerTitle: true,
-      ),
-      body: SafeArea(
-        child: RefreshIndicator(
-          color: AppColors.brandGreen,
-          onRefresh: () async {
-            ref.invalidate(designListProvider);
-            await ref.read(designListProvider.future);
-          },
-          child: isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(color: AppColors.brandGreen800),
-                )
-              : categoryDesigns.isEmpty
-                  ? AppEmptyState(
-                      icon: Icons.checkroom_rounded,
-                      title: 'No products in ${category.name}',
-                      message: 'New boutique designs will be added to this category soon.',
-                    )
-                  : ListView.builder(
-                      physics: const AlwaysScrollableScrollPhysics(
-                        parent: BouncingScrollPhysics(),
-                      ),
-                      padding: const EdgeInsets.only(bottom: 24),
-                      itemCount: categoryDesigns.length,
-                      itemBuilder: (context, index) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: InstagramTrendingCard(
-                            design: categoryDesigns[index],
-                            rankIndex: index + 1,
-                          ),
-                        );
-                      },
+        body: SafeArea(
+          child: RefreshIndicator(
+            color: AppColors.primary,
+            backgroundColor: AppColors.surfaceWhite,
+            onRefresh: () async {
+              ref.invalidate(designListProvider);
+              await ref.read(designListProvider.future);
+            },
+            child: isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.primary,
+                      strokeWidth: 2,
                     ),
+                  )
+                : categoryDesigns.isEmpty
+                    ? AppEmptyState(
+                        icon: Icons.checkroom_rounded,
+                        title: 'No products in ${category.name}',
+                        message:
+                            'New boutique designs will be added to this collection soon.',
+                        actionLabel: 'Browse All Categories',
+                        onAction: () =>
+                            context.push(AppRoutes.customerCategoryList),
+                      )
+                    : ListView.separated(
+                        physics: const AlwaysScrollableScrollPhysics(
+                          parent: BouncingScrollPhysics(),
+                        ),
+                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+                        itemCount: categoryDesigns.length,
+                        separatorBuilder: (ctx, idx) => const SizedBox(height: 14),
+                        itemBuilder: (context, index) {
+                          return SectionProductListItem(
+                            design: categoryDesigns[index],
+                          );
+                        },
+                      ),
+          ),
         ),
       ),
     );

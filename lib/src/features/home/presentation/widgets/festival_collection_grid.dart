@@ -111,6 +111,36 @@ class FestivalCollectionGrid extends ConsumerWidget {
               );
             },
           ),
+
+          const SizedBox(height: 18),
+
+          // 4. Explore full festive collection action
+          GestureDetector(
+            onTap: () => context.push(
+              AppRoutes.customerCategoryDesigns,
+              extra: festiveCategory,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'EXPLORE ALL ${festiveCategory.name.toUpperCase()}',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF162D20),
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const Icon(
+                  Icons.arrow_forward_rounded,
+                  size: 14,
+                  color: Color(0xFF162D20),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

@@ -141,6 +141,7 @@ class StitchingSubmissionNotifier extends Notifier<StitchingSubmissionState> {
     required String? category,
     required String phone,
     String? notes,
+    String? designImageUrl,
   }) async {
     final user = ref.read(currentCustomerUserProvider);
     if (user == null) {
@@ -225,7 +226,13 @@ class StitchingSubmissionNotifier extends Notifier<StitchingSubmissionState> {
         orderNumber: orderNum,
         status: StitchingOrderStatus.requested,
         designReferences: [
-          DesignReferenceModel(designName: garmentName, quantity: 1),
+          DesignReferenceModel(
+            designName: garmentName,
+            quantity: 1,
+            thumbnailUrl: (designImageUrl != null && designImageUrl.trim().isNotEmpty)
+                ? designImageUrl.trim()
+                : null,
+          ),
         ],
         notes: sanitizedNotes,
         createdAt: now,

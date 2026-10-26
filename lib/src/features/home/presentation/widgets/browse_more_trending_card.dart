@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../app/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 
-/// 2nd/End Card in Home Trending Carousel directing users to the full Trending Listing page.
+/// End Card in Home Trending Carousel directing users to the full Trending Listing page.
 class BrowseMoreTrendingCard extends StatelessWidget {
   const BrowseMoreTrendingCard({super.key, this.totalCount});
 
@@ -18,37 +18,45 @@ class BrowseMoreTrendingCard extends StatelessWidget {
         context.push(AppRoutes.customerTrendingListing);
       },
       child: Container(
-        width: 170,
-        height: 290,
+        width: 175,
+        height: 330,
         margin: const EdgeInsets.only(right: 20),
         decoration: BoxDecoration(
           color: AppColors.surfaceWhite,
-          borderRadius: BorderRadius.circular(26),
+          borderRadius: BorderRadius.circular(22),
           border: Border.all(
-            color: AppColors.primary.withValues(alpha: 0.3),
+            color: AppColors.goldAccent.withValues(alpha: 0.35),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 16,
               offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
-                padding: const EdgeInsets.all(14),
+                width: 58,
+                height: 58,
                 decoration: BoxDecoration(
-                  color: AppColors.brandGreen50,
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.goldAccent.withValues(alpha: 0.2),
+                      AppColors.primary.withValues(alpha: 0.1),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.2),
+                    color: AppColors.goldAccent.withValues(alpha: 0.4),
                   ),
                 ),
                 child: const Icon(
@@ -57,22 +65,22 @@ class BrowseMoreTrendingCard extends StatelessWidget {
                   color: AppColors.primary,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
 
               Text(
                 'Explore All\nTrending',
                 style: GoogleFonts.playfairDisplay(
-                  fontSize: 18,
+                  fontSize: 19,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.primary,
+                  color: AppColors.charcoal,
                   height: 1.2,
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
 
               Text(
-                totalCount != null ? 'View $totalCount styles' : 'View full list',
+                totalCount != null ? 'View all $totalCount styles' : 'View full collection',
                 style: GoogleFonts.montserrat(
                   fontSize: 11,
                   color: AppColors.textMuted,
@@ -80,21 +88,28 @@ class BrowseMoreTrendingCard extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
 
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 8,
+                  horizontal: 16,
+                  vertical: 9,
                 ),
                 decoration: BoxDecoration(
                   color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.25),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
                 child: Text(
-                  'BROWSE NOW',
+                  'BROWSE ALL',
                   style: GoogleFonts.montserrat(
-                    fontSize: 9.5,
+                    fontSize: 10,
                     fontWeight: FontWeight.w700,
                     color: AppColors.surfaceWhite,
                     letterSpacing: 1.0,

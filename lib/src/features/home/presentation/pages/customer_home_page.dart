@@ -12,6 +12,7 @@ import '../../../design/application/providers/design_providers.dart';
 import '../../../notification/application/providers/notification_providers.dart';
 import '../widgets/custom_categories_grid.dart';
 import '../widgets/festival_collection_grid.dart';
+import '../widgets/home_category_capsules.dart';
 import '../widgets/home_top_bar.dart';
 import '../widgets/new_arrivals_section.dart';
 import '../widgets/seasonal_collection_list.dart';
@@ -50,22 +51,19 @@ class CustomerHomePage extends ConsumerWidget {
             : 'Valued Customer';
 
     final String? photoUrl = customerProfile?.photoUrl ?? user?.photoURL;
-
     final activeDesigns = designs.where((d) => d.isActive).toList();
-    final trendingDesign = ref.watch(trendingHeroDesignProvider);
     final newArrivalsDesigns = activeDesigns.take(4).toList();
 
+    // Specific theme category detection
     final CategoryModel? festiveCat = categories.where((c) =>
-          c.slug.contains('festive') ||
-          c.name.toLowerCase().contains('festive') ||
-          c.slug.contains('wedding')).firstOrNull ?? (categories.isNotEmpty ? categories.first : null);
+        c.slug.contains('festive') ||
+        c.name.toLowerCase().contains('festive') ||
+        c.slug.contains('wedding')).firstOrNull;
 
     final CategoryModel? seasonalCat = categories.where((c) =>
-          c.slug.contains('seasonal') ||
-          c.name.toLowerCase().contains('seasonal') ||
-          c.slug.contains('summer')).firstOrNull ?? (categories.length > 1 ? categories[1] : null);
-
-    final hasRealCategories = categories.isNotEmpty;
+        c.slug.contains('seasonal') ||
+        c.name.toLowerCase().contains('seasonal') ||
+        c.slug.contains('summer')).firstOrNull;
 
     return Scaffold(
       backgroundColor: AppColors.warmIvory,
@@ -84,7 +82,7 @@ class CustomerHomePage extends ConsumerWidget {
               parent: BouncingScrollPhysics(),
             ),
             slivers: [
-              // Parity SliverPersistentHeader (matches KC-Admin home header)
+              // Top Bar Header
               SliverPersistentHeader(
                 pinned: true,
                 delegate: CustomerHomeHeaderDelegate(
@@ -95,7 +93,7 @@ class CustomerHomePage extends ConsumerWidget {
                 ),
               ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
+              const SliverToBoxAdapter(child: SizedBox(height: 12)),
 
               if (isLoading)
                 const SliverFillRemaining(
@@ -118,23 +116,39 @@ class CustomerHomePage extends ConsumerWidget {
                   ),
                 )
               else ...[
-                // 1. TRENDING Section Carousel
-                if (trendingDesign != null) ...[
-                  const SliverToBoxAdapter(
-                    child: TrendingCarousel(),
+                // 1. Quick Category Capsules (Instant Browsing)
+                if (categories.isNotEmpty) ...[
+                  SliverToBoxAdapter(
+                    child: HomeCategoryCapsules(categories: categories),
                   ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 28)),
+                  const SliverToBoxAdapter(child: SizedBox(height: 18)),
                 ],
 
-                // 2. NEW ARRIVALS Section
+                // 2. TRENDING STYLES Carousel
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: SectionHeaderRow(
+                      title: 'TRENDING STYLES',
+                      onViewAll: () =>
+                          context.push(AppRoutes.customerTrendingListing),
+                    ),
+                  ),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 14)),
+                const SliverToBoxAdapter(child: TrendingCarousel()),
+                const SliverToBoxAdapter(child: SizedBox(height: 28)),
+
+                // 3. NEW ARRIVALS Section
                 if (newArrivalsDesigns.isNotEmpty) ...[
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: SectionHeaderRow(
                         title: 'NEW ARRIVALS',
-                        onViewAll: () =>
-                            context.push(AppRoutes.customerSectionListing),
+                        onViewAll: () => context.push(
+                          '${AppRoutes.customerSectionListing}?section=New+Arrivals',
+                        ),
                       ),
                     ),
                   ),
@@ -148,8 +162,8 @@ class CustomerHomePage extends ConsumerWidget {
                   const SliverToBoxAdapter(child: SizedBox(height: 28)),
                 ],
 
-                // 3. FESTIVAL Section (The Festive Edit)
-                if (hasRealCategories && festiveCat != null) ...[
+                // 4. FESTIVAL Section (The Festive Edit - if available)
+                if (festiveCat != null) ...[
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -161,8 +175,8 @@ class CustomerHomePage extends ConsumerWidget {
                   const SliverToBoxAdapter(child: SizedBox(height: 28)),
                 ],
 
-                // 4. SEASONAL Section (Real Category)
-                if (hasRealCategories && seasonalCat != null && seasonalCat.id != festiveCat?.id) ...[
+                // 5. SEASONAL Section (if available)
+                if (seasonalCat != null && seasonalCat.id != festiveCat?.id) ...[
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -184,7 +198,7 @@ class CustomerHomePage extends ConsumerWidget {
                   const SliverToBoxAdapter(child: SizedBox(height: 28)),
                 ],
 
-                // 5. ALL OTHER REAL CATEGORIES
+                // 6. BOUTIQUE COLLECTIONS Grid
                 if (categories.isNotEmpty) ...[
                   SliverToBoxAdapter(
                     child: Padding(
@@ -196,8 +210,14 @@ class CustomerHomePage extends ConsumerWidget {
                       ),
                     ),
                   ),
+                  const SliverToBoxAdapter(child: SizedBox(height: 14)),
                   SliverToBoxAdapter(
-                    child: CustomCategoriesGrid(categories: categories),
+                    child: CustomCategoriesGrid(
+                      categories: categories,
+                      maxCount: 4,
+                      onViewAll: () =>
+                          context.push(AppRoutes.customerCategoryList),
+                    ),
                   ),
                   const SliverToBoxAdapter(child: SizedBox(height: 36)),
                 ],

@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kc_app/src/features/boutique/presentation/controllers/boutique_selection_controller.dart';
@@ -154,16 +155,55 @@ class _CustomerStitchingOrderDetailsPageState
                   _infoCard(
                     'Items in Order (${_order.designReferences.length})',
                     _order.designReferences.map((d) {
+                      final hasThumb = d.thumbnailUrl != null &&
+                          d.thumbnailUrl!.trim().isNotEmpty;
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                         child: Row(
                           children: [
-                            const Icon(
-                              Icons.check_circle_outline_rounded,
-                              color: AppColors.primary,
-                              size: 18,
-                            ),
-                            const SizedBox(width: AppSpacing.sm),
+                            if (hasThumb) ...[
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: CachedNetworkImage(
+                                  imageUrl: d.thumbnailUrl!,
+                                  width: 44,
+                                  height: 44,
+                                  fit: BoxFit.cover,
+                                  placeholder: (context, url) => Container(
+                                    width: 44,
+                                    height: 44,
+                                    color: AppColors.softCream,
+                                    child: const Center(
+                                      child: SizedBox(
+                                        width: 14,
+                                        height: 14,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  errorWidget: (context, url, error) => Container(
+                                    width: 44,
+                                    height: 44,
+                                    color: AppColors.softCream,
+                                    child: const Icon(
+                                      Icons.image_outlined,
+                                      size: 20,
+                                      color: AppColors.mutedText,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                            ] else ...[
+                              const Icon(
+                                Icons.check_circle_outline_rounded,
+                                color: AppColors.primary,
+                                size: 18,
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                            ],
                             Expanded(
                               child: Text(
                                 '${d.designName} (Qty: ${d.quantity})',

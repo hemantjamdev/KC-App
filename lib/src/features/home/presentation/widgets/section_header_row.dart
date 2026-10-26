@@ -18,44 +18,58 @@ class SectionHeaderRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          children: [
-            const Icon(
-              Icons.local_florist_rounded,
-              size: 14,
-              color: AppColors.brandGreen900,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              title,
-              style: GoogleFonts.montserrat(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: AppColors.brandGreen900,
-                letterSpacing: 1.4,
-              ),
-            ),
-          ],
-        ),
         GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onTap: onViewAll,
           child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
+              const Icon(
+                Icons.local_florist_rounded,
+                size: 14,
+                color: AppColors.brandGreen900,
+              ),
+              const SizedBox(width: 6),
               Text(
-                'View all',
+                title,
                 style: GoogleFonts.montserrat(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.mutedText,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.brandGreen900,
+                  letterSpacing: 1.4,
                 ),
               ),
-              const SizedBox(width: 4),
-              const Icon(
-                Icons.chevron_right_rounded,
-                size: 16,
-                color: AppColors.mutedText,
-              ),
             ],
+          ),
+        ),
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onViewAll,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.brandGreen800.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'View all',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.brandGreen900,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const Icon(
+                  Icons.arrow_forward_rounded,
+                  size: 13,
+                  color: AppColors.brandGreen900,
+                ),
+              ],
+            ),
           ),
         ),
       ],
